@@ -1,0 +1,60 @@
+
+  orc - The Open Registers Compendium
+  ===================================
+
+  Copyright (C) 2017, Andy Bennett and Simon Worthington, Register Dynamics Limited.
+
+ 1. Introduction
+
+	Open Registers are a way of expressing an authoritative list that you
+	can trust. orc is an implementation of the Open Registers data model
+	as well as the more specific gov.uk Registers model.
+
+	This repository is an umbrella for a variety of tools that work
+	together to implement various parts of the model:
+
+	+ chicken/orc - A full, persistent, merkle tree backed implementation of
+	                Open Registers.
+
+	The whole package is distributed under an MIT license and as such is
+	free to use and modify as long as you agree to its terms.
+
+	Note: Should you have any trouble in setting up and using these tools,
+	please feel free to contact me, Andy Bennett at
+	andyjpb@register-dynamics.co.uk.
+
+
+ 2. Installation
+
+	Building the tools in this package requires GNU Make and a recent
+	CHICKEN Scheme.
+
+    2.1. Building from git
+
+            Build and install the orc egg for CHICKEN Scheme thus:
+
+            $ cd chicken/
+            $ chicken-install
+
+    2.2. What gets installed
+
+
+ 3. Usage
+
+ 4. Compatibility nodes
+
+ 5. What's next?
+
+	First and foremost, enjoy the tools and use and extend them to build
+	your own things for processing register data.
+
+	Please feel free to send tools that you build with orc so that they
+	can be integrated and distributed with this package.
+
+	Suggestion, extensions and patches to orc are welcome.
+
+	If you have any questions or problems (even the slightest problems, or
+	the most stupid questions), then please feel free to get in touch with
+	me directly using the addresses above. I will try to help you, get you
+	going or point you in the right direction.
+

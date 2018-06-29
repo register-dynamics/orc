@@ -1,0 +1,442 @@
+assert-root-hash	sha-256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+add-item	{"citizen-names":"Vatican citizen","country":"VA","name":"Vatican City","official-name":"The Vatican City"}
+add-item	{"cardinality":"1","datatype":"string","field":"official-name","phase":"beta","text":"The official or technical name of a record."}
+add-item	{"citizen-names":"Luxembourger","country":"LU","name":"Luxembourg","official-name":"The Grand Duchy of Luxembourg"}
+add-item	{"citizen-names":"Macedonian","country":"MK","name":"Macedonia","official-name":"The Republic of Macedonia","start-date":"1991-09-08"}
+add-item	{"citizen-names":"Ghanaian","country":"GH","name":"Ghana","official-name":"The Republic of Ghana"}
+add-item	{"citizen-names":"Indian","country":"IN","name":"India","official-name":"The Republic of India"}
+add-item	{"citizen-names":"Citizen of Lesotho","country":"LS","name":"Lesotho","official-name":"The Kingdom of Lesotho"}
+add-item	{"citizen-names":"Vatican citizen","country":"VA","name":"Vatican City","official-name":"Vatican City State"}
+add-item	{"citizen-names":"Maldivian","country":"MV","name":"Maldives","official-name":"The Republic of Maldives"}
+add-item	{"citizen-names":"Rwandan","country":"RW","name":"Rwanda","official-name":"The Republic of Rwanda"}
+add-item	{"name":"country"}
+add-item	{"citizen-names":"Moroccan","country":"MA","name":"Morocco","official-name":"The Kingdom of Morocco"}
+add-item	{"citizen-names":"Citizen of the Republic of the Congo","country":"CG","name":"Congo","official-name":"The Republic of the Congo"}
+add-item	{"citizen-names":"East Timorese","country":"TL","name":"East Timor","official-name":"The Democratic Republic of Timor-Leste"}
+add-item	{"citizen-names":"Czech","country":"CZ","name":"Czech Republic","official-name":"The Czech Republic","start-date":"1993-01-01"}
+add-item	{"citizen-names":"Guyanese","country":"GY","name":"Guyana","official-name":"The Co-operative Republic of Guyana"}
+add-item	{"citizen-names":"Kuwaiti","country":"KW","name":"Kuwait","official-name":"The State of Kuwait"}
+add-item	{"citizen-names":"Slovak","country":"SK","name":"Slovakia","official-name":"The Slovak Republic","start-date":"1993-01-01"}
+add-item	{"citizen-names":"St Lucian","country":"LC","name":"St Lucia","official-name":"Saint Lucia","start-date":"1979-02-22"}
+add-item	{"citizen-names":"Romanian","country":"RO","name":"Romania","official-name":"Romania"}
+add-item	{"citizen-names":"Liberian","country":"LR","name":"Liberia","official-name":"The Republic of Liberia"}
+add-item	{"citizen-names":"Citizen of Botswana","country":"BW","name":"Botswana","official-name":"The Republic of Botswana"}
+add-item	{"citizen-names":"Solomon Islander","country":"SB","name":"Solomon Islands","official-name":"Solomon Islands","start-date":"1978-07-07"}
+add-item	{"citizen-names":"Syrian","country":"SY","name":"Syria","official-name":"The Syrian Arab Republic"}
+add-item	{"citizen-names":"Citizen of The Democratic Republic of the Congo","country":"CD","name":"Congo (Democratic Republic)","official-name":"The Democratic Republic of the Congo"}
+add-item	{"citizen-names":"Guatemalan","country":"GT","name":"Guatemala","official-name":"The Republic of Guatemala"}
+add-item	{"citizen-names":"Cameroonian","country":"CM","name":"Cameroon","official-name":"The Republic of Cameroon"}
+add-item	{"citizen-names":"Vietnamese","country":"VN","name":"Vietnam","official-name":"The Socialist Republic of Vietnam"}
+add-item	{"citizen-names":"Togolese","country":"TG","name":"Togo","official-name":"The Togolese Republic"}
+add-item	{"citizen-names":"Nauruan","country":"NR","name":"Nauru","official-name":"The Republic of Nauru"}
+add-item	{"citizen-names":"East German","country":"DD","end-date":"1990-10-02","name":"East Germany","official-name":"Germany Democratic Republic"}
+add-item	{"citizen-names":"Zambian","country":"ZM","name":"Zambia","official-name":"The Republic of Zambia"}
+add-item	{"citizen-names":"Peruvian","country":"PE","name":"Peru","official-name":"The Republic of Peru"}
+add-item	{"citizen-names":"Burkinabe;Burkinan","country":"BF","name":"Burkina Faso","official-name":"Burkina Faso"}
+add-item	{"citizen-names":"Algerian","country":"DZ","name":"Algeria","official-name":"The People's Democratic Republic of Algeria"}
+add-item	{"citizen-names":"Citizen of the Ivory Coast","country":"CI","name":"Ivory Coast","official-name":"The Republic of Cote D'Ivoire"}
+add-item	{"citizen-names":"Ecuadorean","country":"EC","name":"Ecuador","official-name":"The Republic of Ecuador"}
+add-item	{"citizen-names":"Nepalese","country":"NP","name":"Nepal","official-name":"The Federal Democratic Republic of Nepal"}
+add-item	{"citizen-names":"Gambian","country":"GM","name":"The Gambia","official-name":"The Islamic Republic of The Gambia"}
+add-item	{"citizen-names":"South Korean","country":"KR","name":"South Korea","official-name":"The Republic of Korea"}
+add-item	{"citizen-names":"Eritrean","country":"ER","name":"Eritrea","official-name":"The State of Eritrea","start-date":"1993-05-24"}
+add-item	{"citizen-names":"Venezuelan","country":"VE","name":"Venezuela","official-name":"The Bolivarian Republic of Venezuela"}
+add-item	{"citizen-names":"Egyptian","country":"EG","name":"Egypt","official-name":"The Arab Republic of Egypt"}
+add-item	{"citizen-names":"Sierra Leonean","country":"SL","name":"Sierra Leone","official-name":"The Republic of Sierra Leone"}
+add-item	{"citizen-names":"Vincentian","country":"VC","name":"St Vincent","official-name":"Saint Vincent and the Grenadines","start-date":"1979-10-27"}
+add-item	{"citizen-names":"Citizen of Fiji","country":"FJ","name":"Fiji","official-name":"The Republic of Fiji"}
+add-item	{"citizen-names":"Czech","country":"CZ","name":"Czechia","official-name":"The Czech Republic","start-date":"1993-01-01"}
+add-item	{"citizen-names":"Pole","country":"PL","name":"Poland","official-name":"The Republic of Poland"}
+add-item	{"citizen-names":"Dominican","country":"DM","name":"Dominica","official-name":"The Commonwealth of Dominica","start-date":"1978-11-03"}
+add-item	{"citizen-names":"Gambian","country":"GM","name":"Gambia,The","official-name":"The Islamic Republic of The Gambia"}
+add-item	{"citizen-names":"Mongolian","country":"MN","name":"Mongolia","official-name":"Mongolia"}
+add-item	{"citizen-names":"Chinese","country":"CN","name":"China","official-name":"The People's Republic of China"}
+add-item	{"citizen-names":"Dane","country":"DK","name":"Denmark","official-name":"The Kingdom of Denmark"}
+add-item	{"citizen-names":"Gambian","country":"GM","name":"Gambia,The","official-name":"The Republic of the Gambia"}
+add-item	{"citizen-names":"Chilean","country":"CL","name":"Chile","official-name":"The Republic of Chile"}
+add-item	{"citizen-names":"Zimbabwean","country":"ZW","name":"Zimbabwe","official-name":"The Republic of Zimbabwe","start-date":"1980-04-18"}
+add-item	{"citizen-names":"Bahamian","country":"BS","name":"The Bahamas","official-name":"The Commonwealth of The Bahamas"}
+add-item	{"citizen-names":"Colombian","country":"CO","name":"Colombia","official-name":"The Republic of Colombia"}
+add-item	{"citizen-names":"Namibian","country":"NA","name":"Namibia","official-name":"The Republic of Namibia","start-date":"1980-03-21"}
+add-item	{"citizen-names":"Pakistani","country":"PK","name":"Pakistan","official-name":"The Islamic Republic of Pakistan"}
+add-item	{"citizen-names":"Marshall Islander","country":"MH","name":"Marshall Islands","official-name":"The Republic of the Marshall Islands","start-date":"1986-10-21"}
+add-item	{"citizen-names":"Austrian","country":"AT","name":"Austria","official-name":"The Republic of Austria"}
+add-item	{"citizen-names":"Citizen of St Christopher (St Kitts) and Nevis","country":"KN","name":"St Kitts and Nevis","official-name":"The Federation of Saint Christopher and Nevis","start-date":"1983-09-19"}
+add-item	{"citizen-names":"Andorran","country":"AD","name":"Andorra","official-name":"The Principality of Andorra"}
+add-item	{"citizen-names":"Moldovan","country":"MD","name":"Moldova","official-name":"The Republic of Moldova","start-date":"1991-08-27"}
+add-item	{"citizen-names":"Citizen of Burundi","country":"BI","name":"Burundi","official-name":"The Republic of Burundi"}
+add-item	{"citizen-names":"Surinamer","country":"SR","name":"Suriname","official-name":"The Republic of Suriname","start-date":"1975-11-25"}
+add-item	{"citizen-names":"Senegalese","country":"SN","name":"Senegal","official-name":"The Republic of Senegal"}
+add-item	{"citizen-names":"Burmese","country":"MM","name":"Burma","official-name":"The Republic of the Union of Myanmar"}
+add-item	{"citizen-names":"Bhutanese","country":"BT","name":"Bhutan","official-name":"The Kingdom of Bhutan"}
+add-item	{"citizen-names":"Lebanese","country":"LB","name":"Lebanon","official-name":"The Lebanese Republic"}
+add-item	{"citizen-names":"Swede","country":"SE","name":"Sweden","official-name":"The Kingdom of Sweden"}
+add-item	{"citizen-names":"Citizen of Malaysia","country":"MY","name":"Malaysia","official-name":"Malaysia"}
+add-item	{"citizen-names":"Mozambican","country":"MZ","name":"Mozambique","official-name":"The Republic of Mozambique","start-date":"1975-06-25"}
+add-item	{"citizen-names":"Ugandan","country":"UG","name":"Uganda","official-name":"The Republic of Uganda"}
+add-item	{"citizen-names":"Greek","country":"GR","name":"Greece","official-name":"The Hellenic Republic"}
+add-item	{"citizen-names":"Iranian","country":"IR","name":"Iran","official-name":"The Islamic Republic of Iran"}
+add-item	{"citizen-names":"Citizen of Antigua and Barbuda","country":"AG","name":"Antigua and Barbuda","official-name":"Antigua and Barbuda","start-date":"1981-11-01"}
+add-item	{"citizen-names":"Kyrgyz","country":"KG","name":"Kyrgyzstan","official-name":"The Kyrgyz Republic","start-date":"1991-08-31"}
+add-item	{"citizen-names":"Qatari","country":"QA","name":"Qatar","official-name":"The State of Qatar"}
+add-item	{"cardinality":"1","datatype":"string","field":"country","phase":"beta","register":"country","text":"The country's 2-letter ISO 3166-2 alpha2 code."}
+add-item	{"citizen-names":"Costa Rican","country":"CR","name":"Costa Rica","official-name":"The Republic of Costa Rica"}
+add-item	{"citizen-names":"Swazi","country":"SZ","name":"Swaziland","official-name":"The Kingdom of Swaziland"}
+add-item	{"citizen-names":"Japanese","country":"JP","name":"Japan","official-name":"Japan"}
+add-item	{"citizen-names":"Panamanian","country":"PA","name":"Panama","official-name":"The Republic of Panama"}
+add-item	{"citizen-names":"Citizen of Guinea-Bissau","country":"GW","name":"Guinea-Bissau","official-name":"The Republic of Guinea-Bissau"}
+add-item	{"citizen-names":"Italian","country":"IT","name":"Italy","official-name":"The Italian Republic"}
+add-item	{"citizen-names":"Tongan","country":"TO","name":"Tonga","official-name":"The Kingdom of Tonga"}
+add-item	{"citizen-names":"Singaporean","country":"SG","name":"Singapore","official-name":"The Republic of Singapore"}
+add-item	{"citizen-names":"Angolan","country":"AO","name":"Angola","official-name":"The Republic of Angola","start-date":"1975-11-11"}
+add-item	{"citizen-names":"Brazilian","country":"BR","name":"Brazil","official-name":"The Federative Republic of Brazil"}
+add-item	{"citizen-names":"Somali","country":"SO","name":"Somalia","official-name":"Federal Republic of Somalia"}
+add-item	{"citizen-names":"Libyan","country":"LY","name":"Libya","official-name":"Libya"}
+add-item	{"citizen-names":"Georgian","country":"GE","name":"Georgia","official-name":"Georgia","start-date":"1991-04-09"}
+add-item	{"citizen-names":"Azerbaijani","country":"AZ","name":"Azerbaijan","official-name":"The Republic of Azerbaijan","start-date":"1991-08-30"}
+add-item	{"citizen-names":"Salvadorean","country":"SV","name":"El Salvador","official-name":"The Republic of El Salvador"}
+add-item	{"citizen-names":"Uruguayan","country":"UY","name":"Uruguay","official-name":"The Oriental Republic of Uruguay"}
+add-item	{"citizen-names":"Citizen of Kiribati","country":"KI","name":"Kiribati","official-name":"The Republic of Kiribati","start-date":"1979-07-12"}
+add-item	{"citizen-names":"Canadian","country":"CA","name":"Canada","official-name":"Canada"}
+add-item	{"citizen-names":"Grenadian","country":"GD","name":"Grenada","official-name":"Grenada","start-date":"1974-02-07"}
+add-item	{"citizen-names":"Estonian","country":"EE","name":"Estonia","official-name":"The Republic of Estonia","start-date":"1991-08-20"}
+add-item	{"citizen-names":"Ethiopian","country":"ET","name":"Ethiopia","official-name":"The Federal Democratic Republic of Ethiopia"}
+add-item	{"citizen-names":"Portuguese","country":"PT","name":"Portugal","official-name":"The Portuguese Republic"}
+add-item	{"cardinality":"1","datatype":"string","field":"citizen-names","phase":"beta","text":"The name of a country's citizens."}
+add-item	{"citizen-names":"Cambodian","country":"KH","name":"Cambodia","official-name":"The Kingdom of Cambodia"}
+add-item	{"citizen-names":"German","country":"DE","name":"Germany","official-name":"The Federal Republic of Germany","start-date":"1990-10-03"}
+add-item	{"citizen-names":"Lao","country":"LA","name":"Laos","official-name":"The Lao People's Democratic Republic"}
+add-item	{"citizen-names":"Tajik","country":"TJ","name":"Tajikistan","official-name":"The Republic of Tajikistan","start-date":"1991-09-09"}
+add-item	{"citizen-names":"Hungarian","country":"HU","name":"Hungary","official-name":"Hungary"}
+add-item	{"citizen-names":"Ukrainian","country":"UA","name":"Ukraine","official-name":"Ukraine","start-date":"1991-08-24"}
+add-item	{"cardinality":"1","datatype":"datetime","field":"end-date","phase":"beta","text":"The date a record stopped being applicable. For example, the date a school closed down."}
+add-item	{"citizen-names":"Citizen of the Democratic People's Republic of Korea;Citizen of the DPRK","country":"KP","name":"North Korea","official-name":"The Democratic People's Republic of Korea"}
+add-item	{"citizen-names":"Papua New Guinean","country":"PG","name":"Papua New Guinea","official-name":"The Independent State of Papua New Guinea","start-date":"1975-09-16"}
+add-item	{"citizen-names":"Comoran","country":"KM","name":"Comoros","official-name":"The Union of the Comoros","start-date":"1975-07-06"}
+add-item	{"citizen-names":"Mauritian","country":"MU","name":"Mauritius","official-name":"The Republic of Mauritius"}
+add-item	{"citizen-names":"Gabonese","country":"GA","name":"Gabon","official-name":"The Gabonese Republic"}
+add-item	{"citizen-names":"French citizen;Frenchman;Frenchwoman","country":"FR","name":"France","official-name":"The French Republic"}
+add-item	{"citizen-names":"Cypriot","country":"CY","name":"Cyprus","official-name":"The Republic of Cyprus"}
+add-item	{"citizen-names":"Kenyan","country":"KE","name":"Kenya","official-name":"The Republic of Kenya"}
+add-item	{"citizen-names":"Trinidad and Tobago citizen","country":"TT","name":"Trinidad and Tobago","official-name":"The Republic of Trinidad and Tobago"}
+add-item	{"citizen-names":"Omani","country":"OM","name":"Oman","official-name":"The Sultanate of Oman"}
+add-item	{"citizen-names":"Turk","country":"TR","name":"Turkey","official-name":"The Republic of Turkey"}
+add-item	{"cardinality":"1","datatype":"string","field":"name","phase":"beta","text":"The commonly-used name of a record."}
+add-item	{"citizen-names":"Liechtenstein citizen","country":"LI","name":"Liechtenstein","official-name":"The Principality of Liechtenstein"}
+add-item	{"citizen-names":"Albanian","country":"AL","name":"Albania","official-name":"The Republic of Albania"}
+add-item	{"citizen-names":"Micronesian","country":"FM","name":"Micronesia","official-name":"The Federated States of Micronesia","start-date":"1986-11-03"}
+add-item	{"citizen-names":"Armenian","country":"AM","name":"Armenia","official-name":"The Republic of Armenia","start-date":"1991-09-21"}
+add-item	{"citizen-names":"Croatian","country":"HR","name":"Croatia","official-name":"The Republic of Croatia","start-date":"1991-06-25"}
+add-item	{"citizen-names":"Sudanese","country":"SD","name":"Sudan","official-name":"The Republic of the Sudan"}
+add-item	{"citizen-names":"Haitian","country":"HT","name":"Haiti","official-name":"The Republic of Haiti"}
+add-item	{"citizen-names":"Citizen of Vanuatu","country":"VU","name":"Vanuatu","official-name":"The Republic of Vanuatu","start-date":"1980-07-30"}
+add-item	{"citizen-names":"Israeli","country":"IL","name":"Israel","official-name":"The State of Israel"}
+add-item	{"citizen-names":"Barbadian","country":"BB","name":"Barbados","official-name":"Barbados"}
+add-item	{"citizen-names":"New Zealander","country":"NZ","name":"New Zealand","official-name":"New Zealand"}
+add-item	{"citizen-names":"Belarusian","country":"BY","name":"Belarus","official-name":"The Republic of Belarus","start-date":"1991-08-25"}
+add-item	{"citizen-names":"Saudi Arabian","country":"SA","name":"Saudi Arabia","official-name":"The Kingdom of Saudi Arabia"}
+add-item	{"citizen-names":"Tuvaluan","country":"TV","name":"Tuvalu","official-name":"Tuvalu","start-date":"1978-10-01"}
+add-item	{"citizen-names":"Mexican","country":"MX","name":"Mexico","official-name":"The United Mexican States"}
+add-item	{"cardinality":"1","datatype":"datetime","field":"end-date","phase":"beta","text":"The date a record stopped being applicable."}
+add-item	{"citizen-names":"Citizen of the Central African Republic","country":"CF","name":"Central African Republic","official-name":"The Central African Republic"}
+add-item	{"citizen-names":"Jamaican","country":"JM","name":"Jamaica","official-name":"Jamaica"}
+add-item	{"citizen-names":"Turkmen","country":"TM","name":"Turkmenistan","official-name":"Turkmenistan","start-date":"1991-10-27"}
+add-item	{"citizen-names":"Citizen of Bosnia and Herzegovina","country":"BA","name":"Bosnia and Herzegovina","official-name":"Bosnia and Herzegovina","start-date":"1992-03-03"}
+add-item	{"citizen-names":"Finn","country":"FI","name":"Finland","official-name":"The Republic of Finland"}
+add-item	{"citizen-names":"Norwegian","country":"NO","name":"Norway","official-name":"The Kingdom of Norway"}
+add-item	{"citizen-names":"Tunisian","country":"TN","name":"Tunisia","official-name":"The Tunisian Republic"}
+add-item	{"citizen-names":"Djiboutian","country":"DJ","name":"Djibouti","official-name":"The Republic of Djibouti","start-date":"1977-06-27"}
+add-item	{"citizen-names":"Belgian","country":"BE","name":"Belgium","official-name":"The Kingdom of Belgium"}
+add-item	{"citizen-names":"Latvian","country":"LV","name":"Latvia","official-name":"The Republic of Latvia","start-date":"1990-05-04"}
+add-item	{"citizen-names":"Bahraini","country":"BH","name":"Bahrain","official-name":"The Kingdom of Bahrain"}
+add-item	{"citizen-names":"Bolivian","country":"BO","name":"Bolivia","official-name":"The Plurinational State of Bolivia"}
+add-item	{"citizen-names":"Yugoslavian","country":"YU","end-date":"1992-04-28","name":"Yugoslavia","official-name":"Socialist Federal Republic of Yugoslavia"}
+add-item	{"citizen-names":"Uzbek","country":"UZ","name":"Uzbekistan","official-name":"The Republic of Uzbekistan","start-date":"1991-09-01"}
+add-item	{"citizen-names":"Chadian","country":"TD","name":"Chad","official-name":"The Republic of Chad"}
+add-item	{"citizen-names":"Bulgarian","country":"BG","name":"Bulgaria","official-name":"The Republic of Bulgaria"}
+add-item	{"citizen-names":"Thai","country":"TH","name":"Thailand","official-name":"The Kingdom of Thailand"}
+add-item	{"citizen-names":"Equatorial Guinean","country":"GQ","name":"Equatorial Guinea","official-name":"The Republic of Equatorial Guinea"}
+add-item	{"citizen-names":"Cape Verdean","country":"CV","name":"Cape Verde","official-name":"The Republic of Cabo Verde","start-date":"1975-07-05"}
+add-item	{"citizen-names":"Maltese","country":"MT","name":"Malta","official-name":"The Republic of Malta"}
+add-item	{"citizen-names":"Slovene","country":"SI","name":"Slovenia","official-name":"The Republic of Slovenia","start-date":"1991-06-25"}
+add-item	{"citizen-names":"South Sudanese","country":"SS","name":"South Sudan","official-name":"The Republic of South Sudan","start-date":"2011-07-09"}
+add-item	{"citizen-names":"Mauritanian","country":"MR","name":"Mauritania","official-name":"The Islamic Republic of Mauritania"}
+add-item	{"citizen-names":"Malian","country":"ML","name":"Mali","official-name":"The Republic of Mali"}
+add-item	{"fields":["country","name","official-name","citizen-names","start-date","end-date"],"phase":"beta","register":"country","registry":"foreign-commonwealth-office","text":"British English-language names and descriptive terms for countries"}
+add-item	{"citizen-names":"Malawian","country":"MW","name":"Malawi","official-name":"The Republic of Malawi"}
+add-item	{"citizen-names":"Cuban","country":"CU","name":"Cuba","official-name":"The Republic of Cuba"}
+add-item	{"citizen-names":"Yemeni","country":"YE","name":"Yemen","official-name":"The Republic of Yemen","start-date":"1990-05-22"}
+add-item	{"citizen-names":"Tanzanian","country":"TZ","name":"Tanzania","official-name":"The United Republic of Tanzania"}
+add-item	{"citizen-names":"Montenegrin","country":"ME","name":"Montenegro","official-name":"Montenegro"}
+add-item	{"citizen-names":"Nicaraguan","country":"NI","name":"Nicaragua","official-name":"The Republic of Nicaragua"}
+add-item	{"citizen-names":"Iraqi","country":"IQ","name":"Iraq","official-name":"The Republic of Iraq"}
+add-item	{"citizen-names":"Afghan","country":"AF","name":"Afghanistan","official-name":"The Islamic Republic of Afghanistan"}
+add-item	{"citizen-names":"South African","country":"ZA","name":"South Africa","official-name":"The Republic of South Africa"}
+add-item	{"citizen-names":"Citizen of Sri Lanka","country":"LK","name":"Sri Lanka","official-name":"The Democratic Socialist Republic of Sri Lanka"}
+add-item	{"citizen-names":"Spaniard;Spanish citizen","country":"ES","name":"Spain","official-name":"The Kingdom of Spain"}
+add-item	{"citizen-names":"Paraguayan","country":"PY","name":"Paraguay","official-name":"The Republic of Paraguay"}
+add-item	{"citizen-names":"Citizen of Ireland;Irish citizen","country":"IE","name":"Ireland","official-name":"Ireland"}
+add-item	{"cardinality":"1","datatype":"datetime","field":"start-date","phase":"beta","text":"The date a record first became relevant to a register."}
+add-item	{"citizen-names":"Beninese","country":"BJ","name":"Benin","official-name":"The Republic of Benin"}
+add-item	{"citizen-names":"Citizen of Niger","country":"NE","name":"Niger","official-name":"The Republic of Niger"}
+add-item	{"citizen-names":"Australian","country":"AU","name":"Australia","official-name":"The Commonwealth of Australia"}
+add-item	{"citizen-names":"Citizen of the Dominican Republic","country":"DO","name":"Dominican Republic","official-name":"The Dominican Republic"}
+add-item	{"citizen-names":"Citizen of Brunei","country":"BN","name":"Brunei","official-name":"Brunei Darussalam","start-date":"1984-01-01"}
+add-item	{"citizen-names":"Gambian","country":"GM","name":"The Gambia","official-name":"The Republic of The Gambia"}
+add-item	{"citizen-names":"Kazakh","country":"KZ","name":"Kazakhstan","official-name":"The Republic of Kazakhstan","start-date":"1991-12-16"}
+add-item	{"citizen-names":"Jordanian","country":"JO","name":"Jordan","official-name":"The Hashemite Kingdom of Jordan"}
+add-item	{"citizen-names":"Czechoslovak","country":"CS","end-date":"1992-12-31","name":"Czechoslovakia","official-name":"Czechoslovak Republic"}
+add-item	{"citizen-names":"Palauan","country":"PW","name":"Palau","official-name":"The Republic of Palau","start-date":"1994-10-01"}
+add-item	{"citizen-names":"Citizen of Seychelles","country":"SC","name":"Seychelles","official-name":"The Republic of Seychelles","start-date":"1976-06-29"}
+add-item	{"citizen-names":"Serbian","country":"RS","name":"Serbia","official-name":"The Republic of Serbia"}
+add-item	{"citizen-names":"Soviet citizen","country":"SU","end-date":"1991-12-25","name":"USSR","official-name":"Union of Soviet Socialist Republics"}
+add-item	{"citizen-names":"Argentine;Argentinian","country":"AR","name":"Argentina","official-name":"The Argentine Republic"}
+add-item	{"citizen-names":"Bahamian","country":"BS","name":"Bahamas,The","official-name":"The Commonwealth of The Bahamas"}
+add-item	{"citizen-names":"Citizen of Madagascar","country":"MG","name":"Madagascar","official-name":"The Republic of Madagascar"}
+add-item	{"citizen-names":"Citizen of San Marino","country":"SM","name":"San Marino","official-name":"The Republic of San Marino"}
+add-item	{"custodian":"Tony Worron"}
+add-item	{"citizen-names":"Briton;British citizen","country":"GB","name":"United Kingdom","official-name":"The United Kingdom of Great Britain and Northern Ireland"}
+add-item	{"citizen-names":"Indonesian","country":"ID","name":"Indonesia","official-name":"The Republic of Indonesia"}
+add-item	{"citizen-names":"Filipino;Filipina","country":"PH","name":"Philippines","official-name":"The Republic of the Philippines"}
+add-item	{"citizen-names":"Bangladeshi","country":"BD","name":"Bangladesh","official-name":"The People's Republic of Bangladesh"}
+add-item	{"citizen-names":"West German","country":"DE","end-date":"1990-10-02","name":"West Germany","official-name":"Federal Republic of Germany"}
+add-item	{"citizen-names":"Citizen of Sao Tome and Principe","country":"ST","name":"Sao Tome and Principe","official-name":"The Democratic Republic of Sao Tome and Principe","start-date":"1975-07-12"}
+add-item	{"citizen-names":"Citizen of Belize","country":"BZ","name":"Belize","official-name":"Belize","start-date":"1981-09-21"}
+add-item	{"citizen-names":"Citizen of the United Arab Emirates","country":"AE","name":"United Arab Emirates","official-name":"The United Arab Emirates"}
+add-item	{"citizen-names":"Swiss","country":"CH","name":"Switzerland","official-name":"The Swiss Confederation"}
+add-item	{"citizen-names":"Samoan","country":"WS","name":"Samoa","official-name":"The Independent State of Samoa"}
+add-item	{"citizen-names":"United States citizen","country":"US","name":"United States","official-name":"The United States of America"}
+add-item	{"citizen-names":"Russian","country":"RU","name":"Russia","official-name":"The Russian Federation","start-date":"1991-12-25"}
+add-item	{"citizen-names":"Monegasque","country":"MC","name":"Monaco","official-name":"The Principality of Monaco"}
+add-item	{"citizen-names":"Dutch citizen;Dutchman;Dutchwoman","country":"NL","name":"Netherlands","official-name":"The Kingdom of the Netherlands"}
+add-item	{"citizen-names":"Honduran","country":"HN","name":"Honduras","official-name":"The Republic of Honduras"}
+add-item	{"citizen-names":"Kosovan","country":"XK","name":"Kosovo","official-name":"The Republic of Kosovo"}
+add-item	{"citizen-names":"Guinean","country":"GN","name":"Guinea","official-name":"The Republic of Guinea"}
+add-item	{"citizen-names":"Lithuanian","country":"LT","name":"Lithuania","official-name":"The Republic of Lithuania","start-date":"1990-03-11"}
+add-item	{"citizen-names":"Icelander","country":"IS","name":"Iceland","official-name":"The Republic of Iceland"}
+add-item	{"citizen-names":"Nigerian","country":"NG","name":"Nigeria","official-name":"The Federal Republic of Nigeria"}
+add-item	{"cardinality":"1","datatype":"datetime","field":"start-date","phase":"beta","text":"The date a record first became relevant to a register. For example, the date a country was first recognised by the UK."}
+add-item	{"citizen-names":"Citizen of the Ivory Coast","country":"CI","name":"Ivory Coast","official-name":"The Republic of Côte D’Ivoire"}
+add-item	{"custodian":"David de Silva"}
+add-item	{"citizen-names":"Swazi","country":"SZ","name":"Eswatini","official-name":"Kingdom of Eswatini"}
+append-entry	system	name	2017-07-17T10:59:47Z	sha-256:d3d8e15fbd410e08bd896902fba40d4dd75a4a4ae34d98b87785f4b6965823ba
+append-entry	system	custodian	2017-07-17T10:59:47Z	sha-256:6bdb76b1cdec0f43a88aeb91da7336dde2e57af1ecfcb0ac468a6329780f9f68
+append-entry	system	field:country	2017-01-10T17:16:07Z	sha-256:a303d05bdbeb029440344e0f1148f5524b4a2f9076d1b0f36a95ff7d5eeedb0e
+append-entry	system	field:name	2017-01-10T17:16:07Z	sha-256:a7a9f2237dadcb3980f6ff8220279a3450778e9c78b6f0f12febc974d49a4a9f
+append-entry	system	field:official-name	2017-01-10T17:16:07Z	sha-256:5c4728f439f6cbc6c7eea42992b858afc78c182962ba35d169f49db2c88e1e41
+append-entry	system	field:citizen-names	2017-01-10T17:16:07Z	sha-256:494f6fa9481b2d17d72b8fa4dcf91b72751b88c262c4c8f52012cb370afcfbd1
+append-entry	system	field:start-date	2017-01-10T17:16:07Z	sha-256:1cff4c622577fabd35917760b04bc304af3b950e19735b60152c19f18b55e75e
+append-entry	system	field:end-date	2017-01-10T17:16:07Z	sha-256:a557fa9bf4a6ce1991717b9429406f4fa724fb8818dfe018d306694de22efbf7
+append-entry	system	register:country	2016-08-04T14:45:41Z	sha-256:610bde42d3ae2ed3dd829263fe461542742a10ca33865d96d31ae043b242c300
+append-entry	system	field:start-date	2017-08-29T11:30:00Z	sha-256:f09c439836eb6fccfb0680fa98dfc3d0300d1ceb2a43eb3c26b3eed01a42d2c2
+append-entry	system	field:end-date	2017-08-29T11:31:00Z	sha-256:c5845bfc15577e8c120970ba084f1dc2c82b10e703f80d1efe4f694295a5a71d
+append-entry	system	custodian	2017-11-02T11:18:00Z	sha-256:aa98858fc2a8a9fae068c44908932d24b207defe526bdf75e3f6c049bb352927
+append-entry	user	SU	2016-04-05T13:23:05Z	sha-256:e94c4a9ab00d951dadde848ee2c9fe51628b22ff2e0a88bff4cca6e4e6086d7a
+append-entry	user	DE	2016-04-05T13:23:05Z	sha-256:e03f97c2806206cdc2cc0f393d09b18a28c6f3e6218fc8c6f3aa2fdd7ef9d625
+append-entry	user	DD	2016-04-05T13:23:05Z	sha-256:e1357671d0da24668952373d0cdf9f7659a1b155e45c8fb3c2f24331e46edc26
+append-entry	user	YU	2016-04-05T13:23:05Z	sha-256:a074752a77011b18447401652029a9129c53b4ee35e1d99e6dec8b42ff4a0103
+append-entry	user	CS	2016-04-05T13:23:05Z	sha-256:0031f311f87260b07f4c7b25748cfdd8c2d2efa3c15fc98c33dd8563fafb6476
+append-entry	user	GB	2016-04-05T13:23:05Z	sha-256:6b18693874513ba13da54d61aafa7cad0c8f5573f3431d6f1c04b07ddb27d6bb
+append-entry	user	AF	2016-04-05T13:23:05Z	sha-256:6bf7f01f268fa6d18e53eb7d5ebadb41c25c4aa2eedecfb7bc863e233ec99e24
+append-entry	user	AL	2016-04-05T13:23:05Z	sha-256:9d04a7e04ac92ab809a7471e7142617bc30a4b2d2f30c1002520a4a1d216f2a5
+append-entry	user	DZ	2016-04-05T13:23:05Z	sha-256:3548cdf528e450626113d44cdd4ac3a19ff992313fe814899c3198d4e0baeff9
+append-entry	user	AD	2016-04-05T13:23:05Z	sha-256:14fcb5099f0eff4c40d5a85b0e3c2f1a04337dc69dace1fc5c64ec9758a19b13
+append-entry	user	AO	2016-04-05T13:23:05Z	sha-256:c66f7a4f655d41425d2aba07bc6204c1d764c3fd8cfba9b3f8ed25baae244427
+append-entry	user	AG	2016-04-05T13:23:05Z	sha-256:d97b6f4b277e0af0d61456c75106a38cecace2f362d1bfa29e704a63c84e4328
+append-entry	user	AR	2016-04-05T13:23:05Z	sha-256:ca880f33b29256578d0be532579837f08a7bdaf1b968adf6e63708ec2d782a53
+append-entry	user	AM	2016-04-05T13:23:05Z	sha-256:47b2db84d1a0e3abc6bca332a3c40253f84225f181b37a312b0d3c14b32727d1
+append-entry	user	AU	2016-04-05T13:23:05Z	sha-256:a5917aaa595c7dcbade7138d92fc249848df6a9c2efc282e28fb540b3dc3d0bb
+append-entry	user	AT	2016-04-05T13:23:05Z	sha-256:77e8694806852b806d9be797cbcb068ca4a2d7c9ed499daf8341d614686de624
+append-entry	user	AZ	2016-04-05T13:23:05Z	sha-256:be1bdd0de400a14cbd3142ab1c5ce4e06bb4deddeb13bffd4890058f04de651f
+append-entry	user	BS	2016-04-05T13:23:05Z	sha-256:3280e7fb2aaf8c864cdd48d8d493c548fe5e918c2de5d3c2fed69967bf9c984a
+append-entry	user	BH	2016-04-05T13:23:05Z	sha-256:dd4dd8658072865671172333a641e6d37e1d477baa3bf23e7a6b52328a6162c1
+append-entry	user	BD	2016-04-05T13:23:05Z	sha-256:abad68e29c01ae14b24e828fa5b99bad6565800cd9591bf5cf32679013e726a8
+append-entry	user	BB	2016-04-05T13:23:05Z	sha-256:15203db1a0b4ea2685cda93fb8ca9a1adcdd41a63f8eef03365eba5332a2c3e3
+append-entry	user	BY	2016-04-05T13:23:05Z	sha-256:4a84d2e46ab352b337f84e92dc593332fc6bfa994de698acb37adfd0113813c0
+append-entry	user	BE	2016-04-05T13:23:05Z	sha-256:1924e51549dbc45de01cfb444b1ace3f20893fff184bdc9426eb0fdec1192bf6
+append-entry	user	BZ	2016-04-05T13:23:05Z	sha-256:c63e4432bd5967cc660b740ef0e371372f1734db62f464b46a05070b9e97559b
+append-entry	user	BJ	2016-04-05T13:23:05Z	sha-256:1fa352d281dc7cce463a125454d841e5b6cd5bf0a3f57b4d59c6e48298e105fc
+append-entry	user	BT	2016-04-05T13:23:05Z	sha-256:51e5fef041cffbcb6cc6bbcaf292ada263d09b1c4e533cf96da8b1c0d24b1500
+append-entry	user	BO	2016-04-05T13:23:05Z	sha-256:058d5947158d724aac39bd3e069be83fb21856deb4e00ef1734c080169ff916d
+append-entry	user	BA	2016-04-05T13:23:05Z	sha-256:fa02a4104dd3181cae2ef62397268f1d95d37150a15009ba61b54f84d61fb4b0
+append-entry	user	BW	2016-04-05T13:23:05Z	sha-256:608cd602c89522050e8235d2b145ddd1d1817c6c442bb6fec095ef292b8997d1
+append-entry	user	BR	2016-04-05T13:23:05Z	sha-256:5ad9666bf6362ff05bcff93c49138fa1010f9093139ad916deabc665e3c5001f
+append-entry	user	BN	2016-04-05T13:23:05Z	sha-256:86f3445909c019ec4635ea638a6c949c354dd027855f4929da775727c46cbf72
+append-entry	user	BG	2016-04-05T13:23:05Z	sha-256:56f710e5a8d7eb6fffbeb819cfa901ae9af121b2f64bd6b91534bb7d09954e9f
+append-entry	user	BF	2016-04-05T13:23:05Z	sha-256:91af7bcc47b161b8948f743c265479234dfae4924f3211a72bcbde4250832bd9
+append-entry	user	MM	2016-04-05T13:23:05Z	sha-256:d826a3c8c191b08c3da4c7b61e9e8fc1dcb2d6501211df4814d9075f6b865164
+append-entry	user	BI	2016-04-05T13:23:05Z	sha-256:50f7e2bf23b157a5d89ff0139fa453bd98bcfd2331dd98806ce52ef6d33b5a5c
+append-entry	user	KH	2016-04-05T13:23:05Z	sha-256:ce4f468616501c8067649db804e60cb2f177f5d1ab72b371fcd3d8498df7adcb
+append-entry	user	CM	2016-04-05T13:23:05Z	sha-256:2de017cea16f6444dcf5e63459385db222c9211a0353ee62da56d1771339842f
+append-entry	user	CA	2016-04-05T13:23:05Z	sha-256:27c8a0f5af23762e30b11ce5f743abfb443a5c74e5d7c9050e32411a96e6b905
+append-entry	user	CV	2016-04-05T13:23:05Z	sha-256:afe914d82eafd2a8c92d51be7b9900b6602caf51941cdfd0c4b5197f9682a4f5
+append-entry	user	CF	2016-04-05T13:23:05Z	sha-256:17d940731b9abb32f195f1c8d4e2fb2172777fa1ae3074f8f7277c3982036f63
+append-entry	user	TD	2016-04-05T13:23:05Z	sha-256:d9289603bc37049b30cc8b169a59780d93ac9bf4b838d5c4bf3ffb6d4b14354e
+append-entry	user	CL	2016-04-05T13:23:05Z	sha-256:20876a6e92af5c05fe7a11ee0111b1cf04ff5c158abe1f7334755a766a71c180
+append-entry	user	CN	2016-04-05T13:23:05Z	sha-256:bc808ed6f3eb9aba16a4624de0f3e03404d3c35421382bf529dd9a503f341856
+append-entry	user	CO	2016-04-05T13:23:05Z	sha-256:c8b0ab444b62407caf3d5ae2eb99eb42e25cb9b4487c978dbdb49edb939e45c5
+append-entry	user	KM	2016-04-05T13:23:05Z	sha-256:7d7c106548431f31218df1535a93a35ea3b3f22d2bf9318d674c927ccef8fe9a
+append-entry	user	CG	2016-04-05T13:23:05Z	sha-256:9122cdf8b3e283e6d3d2240558ef6ef2e57cb8617b4624e3bcb6b9ca65e2886f
+append-entry	user	CD	2016-04-05T13:23:05Z	sha-256:dea4971f37c8b1d20556b05824cf39e60389c9778cabe6a81ff5af762596427d
+append-entry	user	CR	2016-04-05T13:23:05Z	sha-256:9f1322807b4dad6d120eeacacd812b90b9ab3f41feab39be45fcc1725d2c94b9
+append-entry	user	HR	2016-04-05T13:23:05Z	sha-256:208e2540acd0d6209a6ab88e9b554cfbed2a226580f0d4d452a13389f79fc9f7
+append-entry	user	CU	2016-04-05T13:23:05Z	sha-256:0e05f13f484f53fbafc58b7d935a8640ebecbac26b1962dcd7ef05f8d8fc995a
+append-entry	user	CY	2016-04-05T13:23:05Z	sha-256:c0b0738976093ce8711163068796c29deec46412c056ec948697be35bd1c30f1
+append-entry	user	CZ	2016-04-05T13:23:05Z	sha-256:c45bd0b4785680534e07c627a5eea0d2f065f0a4184a02ba2c1e643672c3f2ed
+append-entry	user	DK	2016-04-05T13:23:05Z	sha-256:e1b54fbe5885d14069c125cb39ee489389e3028fd69b9b0e419f2ec688aad882
+append-entry	user	DJ	2016-04-05T13:23:05Z	sha-256:fbf149fca3315b50710077b017cdf3b569cc41f2a75e787b9dfb4ac48e0f31cf
+append-entry	user	DM	2016-04-05T13:23:05Z	sha-256:ca92ee5217741a2ca6051d25367975dd934854f81dfa6e28dc91f6ec1bfabab4
+append-entry	user	DO	2016-04-05T13:23:05Z	sha-256:a40b482e8e2966406769b5fdd5389da40454209c9d6a7dfcd18ecbea154f3412
+append-entry	user	TL	2016-04-05T13:23:05Z	sha-256:faba1d16a599882f6c50f588bd87321e3629c2a87d974579efb65fb84355eed0
+append-entry	user	EC	2016-04-05T13:23:05Z	sha-256:80442f4556dbf969424a566ecacf075dc09e5c8a3807d252a12c89f4dbb4769b
+append-entry	user	EG	2016-04-05T13:23:05Z	sha-256:be5f4584e3ee1422646a1bd179fc8ea7936a728f0a88d3becc52b83d3fa5c209
+append-entry	user	SV	2016-04-05T13:23:05Z	sha-256:e1e6dd1783266b91deaee0adf59b32945466e5b57eb1abe18bbab91c35f562f0
+append-entry	user	GQ	2016-04-05T13:23:05Z	sha-256:d8f801a489b33a26c7457f9ad9eb49f6a3973f6be2fbfe3bbb6b13e3c7a0b813
+append-entry	user	ER	2016-04-05T13:23:05Z	sha-256:0d62a0cca252b73a826e1db642cdde4a89adf8747c3ecf79e5a34cd1bb94792a
+append-entry	user	EE	2016-04-05T13:23:05Z	sha-256:73c5327e464414b8a6a87cbe3f736c7a001452abe87bb6d3ec8d4f221a4d25c6
+append-entry	user	ET	2016-04-05T13:23:05Z	sha-256:a1940769be9793c6904cd01dc9297f61aa3f49b99007bff734c30269e90b7046
+append-entry	user	FJ	2016-04-05T13:23:05Z	sha-256:dfd316190c8a79880bde587da94d3f0b8eeeb752626a0a64697f2288f1ee4e1f
+append-entry	user	FI	2016-04-05T13:23:05Z	sha-256:df2c57df1a3fce1cdd2b55918e74dcd2cc7e11eec07a619b07fc0a90269450ee
+append-entry	user	FR	2016-04-05T13:23:05Z	sha-256:e583abf7519bb6c92bbdf9ca90d2891add60a4b34b665ed83a86650a98b54c1c
+append-entry	user	GA	2016-04-05T13:23:05Z	sha-256:1f133cb20145534e818734028da0d9fcd823f1ee199b2ffeb7f277c0db25e2a0
+append-entry	user	GM	2016-04-05T13:23:05Z	sha-256:e0bbb548ce74f7e9c6dc65009d983aaeaec05fb308422691b81af425e9f09423
+append-entry	user	GE	2016-04-05T13:23:05Z	sha-256:e057a6d45ba312f55cdd31d8fcad5a79f344d0d8833a34c416a5859f67c30e5c
+append-entry	user	DE	2016-04-05T13:23:05Z	sha-256:747dbb718cb9f9799852e7bf698c499e6b83fb1a46ec06dbd6087f35c1e955cc
+append-entry	user	GH	2016-04-05T13:23:05Z	sha-256:dc1d12943ea264de937468b254286e5ebd8acd316e21bf667076ebdb8c111bd1
+append-entry	user	GR	2016-04-05T13:23:05Z	sha-256:85bf72046e8b6935b2aee45ef4a13a170bb819956c10de92277611dfd196e202
+append-entry	user	GD	2016-04-05T13:23:05Z	sha-256:23ee932e81d9be1b7bc52be0644f810a5c526591df791d64e3b1464bc2404729
+append-entry	user	GT	2016-04-05T13:23:05Z	sha-256:6b9bbb2d3409c1f2751ae36c22e84c1e954fdc2a1b2cb6ecf2635260048a3167
+append-entry	user	GN	2016-04-05T13:23:05Z	sha-256:21eccd06c2c2d23e3f3cfdd3be61ab6cfa08b15d4a0a7188ea4bb25c28935869
+append-entry	user	GW	2016-04-05T13:23:05Z	sha-256:d0e833cb483fe5bcbbd2484794326fd201b2dc83c9b48c3496aff56478abf57c
+append-entry	user	GY	2016-04-05T13:23:05Z	sha-256:36ee7af0d204735abf3d6bebbf2e80fb930bd5db34f4c9471d1f3c231e133157
+append-entry	user	HT	2016-04-05T13:23:05Z	sha-256:f9e92c07726ac713f603f9c8ccd97750977c82b57f970f4fe42cc42d8f35df6a
+append-entry	user	HN	2016-04-05T13:23:05Z	sha-256:1b1c87ceaa3a398aad831d17747ba9ad6c6dbe2146f4b3c15d48af8a8ae45946
+append-entry	user	HU	2016-04-05T13:23:05Z	sha-256:c413c7c33f93db2ced0a16a23ee7ace9525b74d5e2f3f31ef38b820c6e4a33c1
+append-entry	user	IS	2016-04-05T13:23:05Z	sha-256:8600cf69794d9854f8dcd7e51fbcdf8f31678fba12f1c8185fb61211be0628e9
+append-entry	user	IN	2016-04-05T13:23:05Z	sha-256:ee78f485f8ad1a169745366da4057c8fc0102e9461b5c1f0d12e1e381387217e
+append-entry	user	ID	2016-04-05T13:23:05Z	sha-256:9879968660823c6f5566ca91cac4f161b2e94e8f9497958ddd044d66abb844af
+append-entry	user	IR	2016-04-05T13:23:05Z	sha-256:ecd8f9738381675d76ed85a3df8afa7e07f7fdcaba372890aa4aa159cd6ceca2
+append-entry	user	IQ	2016-04-05T13:23:05Z	sha-256:4a92f2fe43dcb63ab3b66e3f4f9ce328bbc61f020ee0ecece4e3da40172cabe0
+append-entry	user	IE	2016-04-05T13:23:05Z	sha-256:aecb4ee6a7a4e49d1f968f02a11550dc8117382b2064dff7c0454c66d44e86f6
+append-entry	user	IL	2016-04-05T13:23:05Z	sha-256:03fd1378efb674662cc302e068078de72e6fd74489ffba19d8f474b6e6c1bd3c
+append-entry	user	IT	2016-04-05T13:23:05Z	sha-256:fb70bc281d1b2a73880c2e0d86f8253db0a1397ddca6258e9253921264ca34bc
+append-entry	user	CI	2016-04-05T13:23:05Z	sha-256:7c16257bd45b4716914010b39dd40e5a6b985b8928d7b8bb0fe3005d2f2b0fec
+append-entry	user	JM	2016-04-05T13:23:05Z	sha-256:13e5cb274e904817afada4563a56509461535c8aff15502a0b7efad226357fc5
+append-entry	user	JP	2016-04-05T13:23:05Z	sha-256:3a38ed71e5de0c0ff8c973f22b3965308b6567096d0952c476f1a1484e4bf62a
+append-entry	user	JO	2016-04-05T13:23:05Z	sha-256:6bff7775498dfa882f1911170fe467f8f64619dd1cab41e1b31947719a762574
+append-entry	user	KZ	2016-04-05T13:23:05Z	sha-256:5cdae4a0d6da81a7615d20f1ece6a6bc8ab50bfe7b010b08bd484c7470945d45
+append-entry	user	KE	2016-04-05T13:23:05Z	sha-256:a47f121bcb7e4c7279e8d566ef62ef21802962f68fc87cdde9cb3e054d96ca6f
+append-entry	user	KI	2016-04-05T13:23:05Z	sha-256:69eeacbe31eb280ee93fee5b3e701a58f3f31c3180d887932b7fdb07e6b8f319
+append-entry	user	KP	2016-04-05T13:23:05Z	sha-256:417078064cda8a732469ca7c3908e4a3bb8be7e5b262b7304c7aa050661164c0
+append-entry	user	KR	2016-04-05T13:23:05Z	sha-256:cfcb269265bf8cae36bca46d6681f7134b168b2aeceef4131809594b0e6ecde8
+append-entry	user	XK	2016-04-05T13:23:05Z	sha-256:fb6dbf64942d56e0f9706693334fabb8fd4cfacaf796ee01522146e0d608ff54
+append-entry	user	KW	2016-04-05T13:23:05Z	sha-256:eb3ee00e6149cd734a7fa7e1f01a5fbf5fb50e1b38a065fd97d6ad3017750351
+append-entry	user	KG	2016-04-05T13:23:05Z	sha-256:8b748c574bf975990e47e69df040b47126d2a0a3895b31dce73988fba2ba27d8
+append-entry	user	LA	2016-04-05T13:23:05Z	sha-256:490636974f8087e4518d222eba08851dd3e2b85095f2b1427ff6ecd3fa482435
+append-entry	user	LV	2016-04-05T13:23:05Z	sha-256:c1de7c598cc2b326018a66b006ad5db9a663ce012d897c223b25db36ca8382d1
+append-entry	user	LB	2016-04-05T13:23:05Z	sha-256:d411b3c908d55f6f80daa30ad693c1ebe9f08dd5530365b0f62389b1a13cac94
+append-entry	user	LS	2016-04-05T13:23:05Z	sha-256:7c0ff61a59fd3997ba2c9fb12565cf00d75ba8eccdf863aa76f092a244f9e2c7
+append-entry	user	LR	2016-04-05T13:23:05Z	sha-256:bf65db91e00af3ab318e594047a245ea34402493847ddde2a141ddbb6d1d3445
+append-entry	user	LY	2016-04-05T13:23:05Z	sha-256:c1d32fcf8ee4a7f18c5765fddf3a6054ff003824f4e9b4882e43370f88811097
+append-entry	user	LI	2016-04-05T13:23:05Z	sha-256:065f76e9e547c6d8e915314a1b78337514fec0c264b555689e78ffd47acd9fec
+append-entry	user	LT	2016-04-05T13:23:05Z	sha-256:a9a56275429799939c8f38a189f203646efff235f1aa58510896a6d576b17742
+append-entry	user	LU	2016-04-05T13:23:05Z	sha-256:b00a1d254e6d187190abe43c8d87c76189d3e18a1c64ea88e365bfe75fe5508a
+append-entry	user	MK	2016-04-05T13:23:05Z	sha-256:af8130b639bb8a675234c313dd763781a7da4e13b7529583d3a3a26c9f580fa7
+append-entry	user	MG	2016-04-05T13:23:05Z	sha-256:22e2594c9b5845e2be21e27c0681132f0fbf7c38107c6da6d159f5b4626788c8
+append-entry	user	MW	2016-04-05T13:23:05Z	sha-256:f920008062bcbdf4b131fda83452a53306458a79376678aa3f6f79dd82e0cce9
+append-entry	user	MY	2016-04-05T13:23:05Z	sha-256:60e19a7cdbf3ab988827f7e9acacd3e2332f20ab884f9b131cdf43f6f5ea9c79
+append-entry	user	MV	2016-04-05T13:23:05Z	sha-256:f2a77c13d773efac02a5d06864b2bcf73bb310aa54819b6f000f3cf785042da3
+append-entry	user	ML	2016-04-05T13:23:05Z	sha-256:1502d9c3dd5d74d59f2d5d0f22c0a6b671c4e056041e20ca85b88fe4c937c75e
+append-entry	user	MT	2016-04-05T13:23:05Z	sha-256:441fe1136fa701eb9ed74b5bcaf2ac80058712d0146ea0d04f00f9df8eecf14b
+append-entry	user	MH	2016-04-05T13:23:05Z	sha-256:541cd698077a663db8f45277a856fb3643304fcd2304aada085aab73505a9df3
+append-entry	user	MR	2016-04-05T13:23:05Z	sha-256:f45980872becc3957db957e35eb4e27b9cef3c313e3a94b375f95b3bd6fc72ab
+append-entry	user	MU	2016-04-05T13:23:05Z	sha-256:63d01b2084c1abdc65c0bed65aef8c06b8c83b973ef88ee646535a0c1438cd22
+append-entry	user	MX	2016-04-05T13:23:05Z	sha-256:90a09c688085a772bd6441423768be6569a1cf9a07fefe781d7dd290586b2e7c
+append-entry	user	FM	2016-04-05T13:23:05Z	sha-256:37106c73c01016740d6bf1e85e80824e9f3520c417df843f8f8c5920a07be322
+append-entry	user	MD	2016-04-05T13:23:05Z	sha-256:5c01391d74afde44cf4009333d79d031de97625e8709c9ba6c585c6b7d8c1e0d
+append-entry	user	MC	2016-04-05T13:23:05Z	sha-256:e341b8f5bbf862b956e81a86ac3e8f86c9ec3c64b9cf4dc048fcc666e09844c1
+append-entry	user	MN	2016-04-05T13:23:05Z	sha-256:67ea12cd877680cd4d0ecd268b89862eba47dac1c5ebe408629d16e4dbf25396
+append-entry	user	ME	2016-04-05T13:23:05Z	sha-256:d98c3da67cfba4c2c227a5d4e3301dcf9c2acfc4db05b2fba0661099e1e6372e
+append-entry	user	MA	2016-04-05T13:23:05Z	sha-256:3e9d91be962450c1fc5d72f515a74f42a4d2fa9bfd9631df8fa3cac0d1968487
+append-entry	user	MZ	2016-04-05T13:23:05Z	sha-256:85f0d2dbe778055ea732d0794269b0d2644ade5abdf38369af812a56aa970a03
+append-entry	user	NA	2016-04-05T13:23:05Z	sha-256:fe4265028d9164d9c15217a8903d45c41bf4a608584715e2f8897e4e58823b5b
+append-entry	user	NR	2016-04-05T13:23:05Z	sha-256:cd72b9665e571588335a83b4f35daac33796ce0d9b6abe40888b6567685ab36c
+append-entry	user	NP	2016-04-05T13:23:05Z	sha-256:114291b927f4189d866ecf6c3cddd0fbc908df838e73fd3c36711a5767cf97fd
+append-entry	user	NL	2016-04-05T13:23:05Z	sha-256:b12534cbbfa6fc41cec278d4091c2f1c9de96532466e5b74937803bf84e2bd14
+append-entry	user	NZ	2016-04-05T13:23:05Z	sha-256:a21357c7fbdb8ff03bee42853c97aa0f993cc12e65e55c48f5d5aea85adf70ad
+append-entry	user	NI	2016-04-05T13:23:05Z	sha-256:74316f67dff7d0bda653f30601824062a4354ad61edc698e99ce02a3aa065ea9
+append-entry	user	NE	2016-04-05T13:23:05Z	sha-256:77b37f9314a6b1310d59dfed862460f1a43c37213e780eca1c0a51dcbad4b452
+append-entry	user	NG	2016-04-05T13:23:05Z	sha-256:790a98d2fb550158819bdbf744f53888f6f4a557f39df9cc814bf16de935c9eb
+append-entry	user	NO	2016-04-05T13:23:05Z	sha-256:d5873302cd845c721f0da4d7f44a9502825c1d944ef6dc3057941c889258fbe0
+append-entry	user	OM	2016-04-05T13:23:05Z	sha-256:fd9f928852ad89811c5e1387b030d463b8c35e59421c415b91b614c4cc314892
+append-entry	user	PK	2016-04-05T13:23:05Z	sha-256:23493ee9ddcd592719cfc04ca769dc3e8b06836d7119583cf2b11bb24fc9e978
+append-entry	user	PW	2016-04-05T13:23:05Z	sha-256:d2078aa1d7670b9b99fca56a88b0e53b5267271ead9aa9dbd95de0440644416b
+append-entry	user	PA	2016-04-05T13:23:05Z	sha-256:4c1aee395ff77743bdd99a036d4573c527674fa4cdf2f085e3aa8cd99f22ce4e
+append-entry	user	PG	2016-04-05T13:23:05Z	sha-256:e36519b5b0cb4556af87a0705ac7e4f53ab81e733d01e58965148c49f7eab82c
+append-entry	user	PY	2016-04-05T13:23:05Z	sha-256:ce57e3a16ba6645dac61bb4d997f13fbab3de1b0f1d0f592ac510ab94867ec7b
+append-entry	user	PE	2016-04-05T13:23:05Z	sha-256:901dcacd3609e3adf154f509e553e2524fcdeaeb20f3871520d52c541ccc9fe3
+append-entry	user	PH	2016-04-05T13:23:05Z	sha-256:9202549fa85ecc1a72ce62d640a08cd296ab7dff834732decdcbb370b49b9293
+append-entry	user	PL	2016-04-05T13:23:05Z	sha-256:ecc388970f6c58a552f3b5c65847867d024d4a984a2e81a3f587cb829807d9c1
+append-entry	user	PT	2016-04-05T13:23:05Z	sha-256:237f7100bbbdcf670f0b0087a07350cd824007e230795acef6835883a68f9a37
+append-entry	user	QA	2016-04-05T13:23:05Z	sha-256:35759f269063ffedb40d97a1e61d0fba3a70bb005d459633e5da4155dd4ccfbb
+append-entry	user	RO	2016-04-05T13:23:05Z	sha-256:63bd38f65b44e0fd32785668ed4cda1b9375b802df08aa23aa5934bcf291df74
+append-entry	user	RU	2016-04-05T13:23:05Z	sha-256:84cca8cb3b2b7862ea6fc1502ec93e46319e2eca1742a3272dd6e02fca5a90bd
+append-entry	user	RW	2016-04-05T13:23:05Z	sha-256:28f3129e67f9090a61d044bf39411f5689c3eaa4249ea8324e7c56d269daa9b0
+append-entry	user	KN	2016-04-05T13:23:05Z	sha-256:b1e504729906351725c3129717e8ffdb3d6c3f295d5bfa7e09d1985062fa0752
+append-entry	user	LC	2016-04-05T13:23:05Z	sha-256:80100f293b5b6e949af810887c84ebe7e79dfd030051a2cade595e3312413215
+append-entry	user	VC	2016-04-05T13:23:05Z	sha-256:4f741c4cfd4c81ad76f18601977c145138630219f92dd2570fb0495157a72554
+append-entry	user	WS	2016-04-05T13:23:05Z	sha-256:bef4df153a794ff36ce8eb113c18360dc754af1a696058999b71376ece692237
+append-entry	user	SM	2016-04-05T13:23:05Z	sha-256:b9dd6114360f8ead867b7bc4b5e8c3c8aba891751510024f2db68c04c0a3a533
+append-entry	user	ST	2016-04-05T13:23:05Z	sha-256:5b140fa3611c6f1faa56fed779af7da604e2ade00f0da116f9e536bc2a7a3c17
+append-entry	user	SA	2016-04-05T13:23:05Z	sha-256:7b2bbc9351ecfa03592952224ec189973c782986a3b6feaf3a6e372c3c94db54
+append-entry	user	SN	2016-04-05T13:23:05Z	sha-256:69011cfeece3b537c677278239e1953f7a548a452c95452cdd2721fe9f66d658
+append-entry	user	RS	2016-04-05T13:23:05Z	sha-256:236a801b10320d3c9c4d26bfafd765986f9ae07f1cc12959aa81cf8aed8af243
+append-entry	user	SC	2016-04-05T13:23:05Z	sha-256:37a4ad905de5f203642321eda62dee875ad72453ea15a04b55b6e7f7f912dd19
+append-entry	user	SL	2016-04-05T13:23:05Z	sha-256:30a05659fd604b1b3409babfc5d98e683813c34e52c98f4c83dc566747a43a32
+append-entry	user	SG	2016-04-05T13:23:05Z	sha-256:3c8ee9ea8ba898a678cc10049a17f808a78e0d54af793363ae0201428c91b7d7
+append-entry	user	SK	2016-04-05T13:23:05Z	sha-256:92938c6db920eab9fdc4ccc0cf1ae113cd6d10d9be062b54ddf559e5d8000649
+append-entry	user	SI	2016-04-05T13:23:05Z	sha-256:3f3f84598f5715b91d06fa9755e43b52caf7b174e43a3499015cd56dd155d20b
+append-entry	user	SB	2016-04-05T13:23:05Z	sha-256:5b078885397e7f4983a73cfe84c9adb2e4ae638fbfd214ccb4e53c045f498a82
+append-entry	user	SO	2016-04-05T13:23:05Z	sha-256:c4a7eaf6dc782bcd64e25120d05708ba71e29a7680f5e5a5406b6dae815f5edd
+append-entry	user	ZA	2016-04-05T13:23:05Z	sha-256:0577dbad39a261bf7978fad0ea17bf67858817ecc7047ba7edf1f28ca02b46b4
+append-entry	user	SS	2016-04-05T13:23:05Z	sha-256:6524bf4347dd781b121c1e28fb36ced1568614918c7aff5b4d92da890c2ea049
+append-entry	user	ES	2016-04-05T13:23:05Z	sha-256:368f4923627e33fe4eef428f747fa0813a64eb43324bfc1aacb16a40dfa64f19
+append-entry	user	LK	2016-04-05T13:23:05Z	sha-256:9a5991d953e2859aa9758f97fc6662ddf2c680e8d23a5e2936cc4957fd853c7b
+append-entry	user	SD	2016-04-05T13:23:05Z	sha-256:cc524b28c9b6d210c19b8f53a91e8d166c9d2f9ee316b22dc1f27ed35da34564
+append-entry	user	SR	2016-04-05T13:23:05Z	sha-256:54444b35fc2d463178e371aea46ce67f4b08c90e0636b8580c911b34c9f1125a
+append-entry	user	SZ	2016-04-05T13:23:05Z	sha-256:d854e31c09e4487a8e607a141de81d2bc34b1ca9f6d60d505888801ee5fb3510
+append-entry	user	SE	2016-04-05T13:23:05Z	sha-256:6a693202d812376dca679fca3d36f108653b8470556f7532177175e68efcc4b5
+append-entry	user	CH	2016-04-05T13:23:05Z	sha-256:8aa9b6292caa7ebbe1b5afe12fc2b307ed32e4ab822ba2c01a0ef10f8450baef
+append-entry	user	SY	2016-04-05T13:23:05Z	sha-256:03b3138d82567cf7c92542df724ce5deb38a9bf3ad65cc59f77023069cf65ef5
+append-entry	user	TJ	2016-04-05T13:23:05Z	sha-256:03d5a82e573cbaa7b95c71ba5b078f88ffe99b3e4b97952f4fa10e8fe6aeab17
+append-entry	user	TZ	2016-04-05T13:23:05Z	sha-256:e8340bff2deab287068524d6fb5feec1003365d25188eed72a8f3738bfa2ec7f
+append-entry	user	TH	2016-04-05T13:23:05Z	sha-256:d2573565cb9155bf24ac971c578867c5b10610b7dd558211f9df30244d68216f
+append-entry	user	TG	2016-04-05T13:23:05Z	sha-256:ecadf144a77778b83e5c47718a8e383e0ec9d1e1652b3e1f0825f64611b9dfbf
+append-entry	user	TO	2016-04-05T13:23:05Z	sha-256:60bf05eff5a3902a0a770fb844e25c918e0b016ea92a1d017b9dd8b944a16388
+append-entry	user	TT	2016-04-05T13:23:05Z	sha-256:6f630356cbaa6e96ed592b26bb6ba707826fd95e1500875ca4010b1067666221
+append-entry	user	TN	2016-04-05T13:23:05Z	sha-256:e6980aee1234069dcb6188a681696ddda7c33fb3562d69ea0be0d53f2906abc4
+append-entry	user	TR	2016-04-05T13:23:05Z	sha-256:547035e601ee8d0277fc11ea87fd4cf5e200c7a8d7c1d91591bb718cf410f846
+append-entry	user	TM	2016-04-05T13:23:05Z	sha-256:15d6ad4b828394e5db3b24cf15277eed51f6ccbe936d71fd583e071159370e16
+append-entry	user	TV	2016-04-05T13:23:05Z	sha-256:f18ade1035a53da478ad84ca73209128fdecc5b4234bde9e37bdbf5e60670dd7
+append-entry	user	UG	2016-04-05T13:23:05Z	sha-256:c799ac9946bed4885c3e57abce00bbc4700ea9a95b1f65c9fdb88533aa64d47b
+append-entry	user	UA	2016-04-05T13:23:05Z	sha-256:3413d164924f47d3b6b8618a5de30a53b8b8b692bded4f16203090c0808b1e99
+append-entry	user	AE	2016-04-05T13:23:05Z	sha-256:d46c998e0013d1de0734132b26d99fdd638dccb8de4c4a88451af88579120844
+append-entry	user	US	2016-04-05T13:23:05Z	sha-256:0abbabb7b2c3259dc326a23cf21ef2ed1b39b1d70973c64b293ffbeff351a3fe
+append-entry	user	UY	2016-04-05T13:23:05Z	sha-256:bf953faff6c89f0085e220605bbbb8f5ad12d8c53bcc320237b20f554db78eab
+append-entry	user	UZ	2016-04-05T13:23:05Z	sha-256:6d37b260df22e583623a29b06f75957661f3baea526964990b8e97beac8a0a35
+append-entry	user	VU	2016-04-05T13:23:05Z	sha-256:619ad0bf5aa6c8125569d89656e01cb70cf16cc489c048dfbd7de536fe0eeb67
+append-entry	user	VA	2016-04-05T13:23:05Z	sha-256:d97d6b34bc572e334cbd7898f785b72947557d9dbea59977077f231274259f3b
+append-entry	user	VE	2016-04-05T13:23:05Z	sha-256:50649b40f1bb4ae51431aec9be3f57cd2dd4a6f642f3471d3940bb2669292ed8
+append-entry	user	VN	2016-04-05T13:23:05Z	sha-256:15e0d6355b2e1bc664a719470a3061823b748b83abd54c3acc37eadcecd77511
+append-entry	user	YE	2016-04-05T13:23:05Z	sha-256:3fce9c67e4581d895712a6ef1e7f3020f34bf80baad04413e25d8677b972b1e4
+append-entry	user	ZM	2016-04-05T13:23:05Z	sha-256:4dbf7919be59e1477ef719637d335666f5d54e272f6440abeae3519a45031433
+append-entry	user	ZW	2016-04-05T13:23:05Z	sha-256:d42acdfd107649a25563ca1eb9af0e92b034951c63983c431e77400daeefd2c8
+append-entry	user	GM	2016-04-05T13:23:05Z	sha-256:83e964d28ba447d2b74bee76c18fe78be30d49ac00a03b8b51cd47300213dd70
+append-entry	user	GM	2016-04-05T13:23:05Z	sha-256:dac66e05ee41707ff9115ed72705eaf8c2e0171285405bea9d859903e8f7ee40
+append-entry	user	BS	2016-04-05T13:23:05Z	sha-256:a77f1e11270aab0c5bf315b2e7c268a7aff89713578020e1b4183c6df2b2c0e7
+append-entry	user	VA	2016-04-05T13:23:05Z	sha-256:466d194d5100532edd115e3f0035967b09bc7b7f5fc444166df6f4a5f7cb9127
+append-entry	user	CZ	2016-11-11T16:25:07Z	sha-256:c69c04fff98c59aabd739d43018e87a25fd51a00c37d100721cc68fa9003a720
+append-entry	user	GM	2017-03-29T14:22:30Z	sha-256:0429375c4fb403288ef816e5dd38a24f192e35b8f55e40cc6266eb25eaef77b1
+append-entry	user	CI	2017-10-25T09:52:52Z	sha-256:b3ca21b3b3a795ab9cd1d10f3d447947328406984f8a461b43d9b74b58cccfe8
+append-entry	user	SZ	2018-06-13T13:54:40Z	sha-256:f89f36ed8b2a1417237a8e95b810e8ab4ead844277ad7bc7794cb5f83732c976
+assert-root-hash	sha-256:8d92e1e0af1d43c41e498e6baed0d0b3ea2770d1bf9d2afc04e9c4dad7795729
