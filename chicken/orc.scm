@@ -387,8 +387,15 @@
   (assert (register? register)
 	  (conc "register-root-digest: register argument must be a register! We got " register))
 
-  (let ((log (register-log register)))
-    (merkle-tree-hash log)))
+  ; FIXME: We don't currently have a merkle tree implmentation that we can use
+  ; on our backing store so fake the root digest for now. We just need
+  ; something that changes as the Register changes so return something based on
+  ; the backing store-id and the version number.
+  (string->blob
+    (conc
+      (number->string (register-backing-store-ref register))
+      "root digest "
+      (number->string (register-version register)))))
 
 
 ; Adds the specified item to the item pool.
