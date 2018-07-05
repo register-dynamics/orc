@@ -300,14 +300,23 @@
 	  (conc "make-item-ref: Only 'sha-256 item digest algorithms are supported! We got " algo))
 
   (assert (blob? digest)
-	  (conc "make-item-ref: digest argument must be a blog! We got " digest))
+	  (conc "make-item-ref: digest argument must be a blob! We got " digest))
 
-  `(item-ref digest ,algo ,digest))
+  `(item-ref digest (,algo ,digest)))
+
+; Makes an item-ref that points to the item directly in the Backing Store.
+; This constructor should only be called by the Backing Store code.
+(define (make-item-ref-opaque item-id)
+
+  (assert (integer? item-id)
+	  (conc "make-item-ref-opaque: item-id argument must be an integer! We got " item-id))
+
+  `(item-ref opaque (,item-id)))
 
 (define (item-ref? obj)
   (and
     (list? obj)
-    (= 4 (length obj))
+    (= 3 (length obj))
     (eqv? 'item-ref (car obj))))
 
 (define (item-or-ref? obj)
@@ -326,14 +335,30 @@
   (assert (item-ref? item-ref)
 	  (conc "item-ref-algo: item-ref argument must be an item-ref! We got " item-ref))
 
-  (third item-ref))
+  (assert (eqv? 'digest (item-ref-type item-ref))
+	  (conc "item-ref-algo: item-ref argument must be a 'digest item-ref! We got " item-ref))
+
+  (first (third item-ref)))
 
 (define (item-ref-digest item-ref)
 
   (assert (item-ref? item-ref)
 	  (conc "item-ref-digest: item-ref argument must be an item-ref! We got " item-ref))
 
-  (fourth item-ref))
+  (assert (eqv? 'digest (item-ref-type item-ref))
+	  (conc "item-ref-digest: item-ref argument must be a 'digest item-ref! We got " item-ref))
+
+  (second (third item-ref)))
+
+(define (item-ref-item-id item-ref)
+
+  (assert (item-ref? item-ref)
+	  (conc "item-ref-item-id: item-ref argument must be an item-ref! We got " item-ref))
+
+  (assert (eqv? 'opaque (item-ref-type item-ref))
+	  (conc "item-ref-item-id: item-ref argument must be an 'opaque item-ref! We got " item-ref))
+
+  (first (third item-ref)))
 
 
 ;; Operations
