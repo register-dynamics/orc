@@ -87,6 +87,9 @@
 
 	 ; RSF
 	 read-rsf
+
+	 ; Backing Stores
+	 initialise-backing-store
 	 )
 
 
@@ -96,7 +99,7 @@
 (use extras data-structures srfi-1 ports)
 
 ; Eggs - http://wiki.call-cc.org/chicken-projects/egg-index-4.html
-(use srfi-19 merkle-tree message-digest sha2)
+(use srfi-19 merkle-tree message-digest sha2 sql-de-lite)
 ;(use numbers) ; The Sparse Merkle Tree needs some *really* big numbers!
 
 
@@ -708,5 +711,139 @@
 	  (read-line)
 	  (add1 line-no))))))
 
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; SQLite Backing Store
+
+; Initialises an SQLite Database with the appropriate schema.
+;
+; filename
+;   Any of:
+;     + A filename on disk for a fully persistent backing store.
+;     + 'memory for a new database in memory, unique to this connection.
+;     + 'temporary for a new temporary database on disk, visible only to this
+;       connection.
+;
+;   'memory or 'temporary cannot be used in pools.
+;
+; Returns #t if the database was successfully initialised and throws an
+; exception otherwise.
+;
+; There is currently no provision for customising the table names or having
+; more than one backing store per database file.
+(define (initialise-backing-store filename)
+  (let ((db (open-database filename)))
+    (with-transaction
+      db
+      (lambda ()
+	(for-each
+	  (lambda (q)
+	    (exec
+	      (sql db q)))
+	  `("CREATE TABLE \"entry-items\" (\"log-id\"  NOT NULL , \"entry-number\"  NOT NULL , \"item-id\"  NOT NULL );"
+	    "CREATE TABLE \"entrys\" (\"log-id\" INTEGER NOT NULL , \"entry-number\" INTEGER NOT NULL , \"region\" TEXT NOT NULL , \"key\" TEXT NOT NULL , \"timestamp\" INTEGER NOT NULL , PRIMARY KEY (\"log-id\", \"entry-number\"));"
+	    "CREATE TABLE \"item-digests\" (\"item-id\" INTEGER NOT NULL , \"algorithm\" TEXT NOT NULL , \"digest\" BLOB NOT NULL , PRIMARY KEY (\"item-id\", \"algorithm\"));"
+	    "CREATE TABLE \"items\" (\"item-id\" INTEGER PRIMARY KEY  NOT NULL  UNIQUE , \"blob\" BLOB NOT NULL  UNIQUE );"
+	    "CREATE TABLE \"registers\" (\"log-id\" INTEGER PRIMARY KEY  NOT NULL  UNIQUE , \"index-of\" INTEGER NOT NULL , \"name\" TEXT NOT NULL );"
+	    "CREATE INDEX \"entry-items-log-id-entry-number-item-id\" ON \"entry-items\" (\"log-id\" ASC, \"entry-number\" ASC, \"item-id\" ASC);"
+	    "CREATE UNIQUE INDEX \"entrys-region-key-entry-number-log-id\" ON \"entrys\" ( \"region\" ASC, \"key\" ASC, \"entry-number\" ASC, \"log-id\" ASC);"
+	    "CREATE UNIQUE INDEX \"item-digests-algorithm-digest\" ON \"item-digests\" (\"algorithm\" ASC, \"digest\" ASC);"
+	    "CREATE UNIQUE INDEX \"registers-index-of-name\" ON \"registers\" (\"index-of\" ASC, \"name\" ASC);"))
+	#t))))
+
+(define db-ctx (make-parameter (open-database "orc.backing-store.sqlite")))
+
+;; ADTs for the Backing Store
+
+; An SQL query.
+; This collects the query string together with the appropriate serialisers and
+; deserialisers for using it.
+(define (make-query query-string argument-serialisers result-deserialisers)
+
+  (assert (string? query-string)
+	  (conc "make-query: query-string argument must be a string! We got " query-string))
+
+  (assert (list? argument-serialisers)
+	  (conc "make-query: argument-serialisers argument must be a list! We got " argument-serialisers))
+
+  (assert (every procedure? argument-serialisers)
+	  (conc "make-query: argument-serialisers argument must be a list of procedures! We got " argument-serialisers))
+
+  (assert (list? result-deserialisers)
+	  (conc "make-query: result-deserialisers argument must be a list! We got " result-deserialisers))
+
+  (assert (every procedure? result-deserialisers)
+	  (conc "make-query: result-deserialisers argument must be a list of procedures! We got " result-deserialisers))
+
+  `(query ,query-string ,argument-serialisers ,result-deserialisers))
+
+(define (query? obj)
+  (and
+    (list? obj)
+    (= 4 (length obj))
+    (eqv? 'query (car obj))))
+
+(define (query-string query)
+  (assert (query? query)
+	  (conc "query-string: query argument must be a query! We got " query))
+  (second query))
+
+(define (query-argument-serialisers query)
+  (assert (query? query)
+	  (conc "query-argument-serialisers: query argument must be a query! We got " query))
+  (third query))
+
+(define (query-result-deserialisers query)
+  (assert (query? query)
+	  (conc "query-result-deserialisers: query argument must be a query! We got " query))
+  (fourth query))
+
+
+;; Operations for the Backing Store
+
+; Run a query on the backing store, applying the serialisers, deserialisers and
+; constructors at the appropriate time.
+(define (run-query db the-query constructor . arguments)
+
+  (assert (query? the-query)
+	  (conc "run-query: query argument must be a query! We got " the-query))
+
+  (assert (procedure? constructor)
+	  (conc "run-query: constructor argument must be a procedure! We got " constructor))
+
+  (apply query
+	 (map-rows
+	   (lambda (row)
+	     (let ((row
+		     (map
+		       (lambda (proc col)
+			 (proc col))
+		       (query-result-deserialisers the-query)
+		       row)))
+	       (apply constructor row))))
+	 (sql db (query-string the-query))
+	 (map
+	   (lambda (proc arg)
+	     (proc arg))
+	   (query-argument-serialisers the-query)
+	   arguments)))
+
+; Run an exec on the backing store, applying the serialisers at the appropriate
+; time.
+; Statements that are exec'd rather than query'd don't return a result set so
+; we don't need to run the deserialisers or constructors.
+(define (run-exec db the-query . arguments)
+
+  (assert (query? the-query)
+	  (conc "run-query: query argument must be a query! We got " the-query))
+
+  (apply exec
+	 (sql db (query-string the-query))
+	 (map
+	   (lambda (proc arg)
+	     (proc arg))
+	   (query-argument-serialisers the-query)
+	   arguments)))
 )
 
