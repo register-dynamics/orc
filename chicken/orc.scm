@@ -382,12 +382,6 @@
 
 ;; Operations on Registers
 
-(define (region->map region register)
-  (case region
-    ((system) (register-map-system register))
-    ((user)   (register-map-user   register))
-    (else     #f)))
-
 (define (register-root-digest register)
 
   (assert (register? register)
@@ -485,56 +479,44 @@
 
 ; TODO: probably best to rework this as an iterator interface!
 ; Returns a list of entries.
-; We don't expose "records" (key->entry thingies) outside the module.
-(define (register-records region register)
+; Returns the latest entry for every key in the register.
+; Tombstones are not visible through this interface. i.e. If the latest entry
+; for a particular key has no items then it will not appear at all in the
+; result set.
+(define (register-records register region)
 
   (assert (register? register)
 	  (conc "register-records: register argument must be a register. We got " register))
 
-  (let ((the-map (region->map region register)))
+  (assert (or (eqv? 'user   region)
+	      (eqv? 'system region))
+	  (conc "register-record-ref: Only 'system and 'user regions are supported! We got " region))
 
-    (assert the-map
-	    (conc "register-records: unexpected region " region))
+  (entry-store-keys register region))
 
-    (map
-      (lambda (record)
-	;(assert (and (list? record) (= 2 (length record)))
-	;	(conc "register-records: expected a record in " region " map! We got: " record))
-
-	(let ((key   (car record))
-	      (entry (cdr record)))
-
-	  (apply
-	    make-entry
-	    (entry-region  entry)
-	    (entry-key     entry)
-	    (entry-ts      entry)
-	    (resolve-items (entry-items entry)))))
-      the-map)))
-
-; Returns the entry corresponding to the key or #f if there isn't one.
-(define (register-record-ref region key register)
+; Returns the latest entry corresponding to the key or #f if there isn't one.
+; Tombstones are not visible through this interface. i.e. If the latest entry
+; for a particular key has no items then it will not appear at all in the
+; result set.
+(define (register-record-ref register region key)
 
   (assert (register? register)
-	  (conc "register-records: register argument must be a register. We got " register))
+	  (conc "register-record-ref: register argument must be a register. We got " register))
+
+  (assert (or (eqv? 'user   region)
+	      (eqv? 'system region))
+	  (conc "register-record-ref: Only 'system and 'user regions are supported! We got " region))
 
   (assert (key? key)
-	  (conc "register-records: key argument must be a key. We got " key))
+	  (conc "register-record-ref: key argument must be a key. We got " key))
 
-  (let ((the-map (region->map region register)))
-
-    (assert the-map
-	    (conc "register-records: unexpected region " region))
-
-    (let ((entry (alist-ref key the-map key-equal? #f)))
-      (if entry
-	(apply
-	  make-entry
-	  (entry-region  entry)
-	  (entry-key     entry)
-	  (entry-ts      entry)
-	  (resolve-items (entry-items entry)))
-	#f))))
+  (let ((entries (entry-store-key-ref register region key)))
+   (case (length entries)
+    ((0) #f)
+    ((1) (car entries))
+    (else
+     (assert #f
+      (conc "register-record-ref: Expected a single entry but got " entries))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -671,27 +653,6 @@
 
   (equal? a b))
 
-; Takes a list of items or item-refs and returns the corresponding list of items.
-(define (resolve-items lst)
-
-  (assert (list? lst)
-	  (conc "resolve-items: items argument must be a list! We got " lst))
-
-  (map
-    (lambda (item-or-ref)
-      (cond
-	((item? item-or-ref)
-	 item-or-ref)
-	((item-ref? item-or-ref)
-	 ; We could do this dereferencing here or we could do it in the accessor.
-	 ; How lazy do we want to be?
-	 ; How easy would it be to do given that the accessor actually returns a list of items?
-	 ; What if the item-ref returns an item-ref? What if we resolve it and that results in an infinite loop?
-	 (item-store-ref item-or-ref))
-	(else
-	  (assert #f
-		  (conc "resolve-items: unexpected item-ish " item-or-ref)))))
-    lst))
 
 
 ;; Operations on Dates
