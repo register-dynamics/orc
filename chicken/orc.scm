@@ -75,6 +75,7 @@
 	 item?
 	 make-item-ref
 	 item-ref?
+	 item-eqv?
 	 item-equal?
 	 item-item-ref
 	 item-blob
@@ -571,6 +572,26 @@
 		 'blob)))
 
     (make-item-ref algo digest)))
+
+; Compare items.
+; They must be equivalent. i.e. they must contain the same blob but the
+; reference can be different if it is a different type or algorithm.
+; TODO: for now we require references to be equal if they are of the same type.
+;       We can relax this for 'digest item-refs provided the algorithms differ.
+(define (item-eqv? a b)
+
+  (assert (item? a)
+	  (conc "item-equal?: a argument must be an item! We got " a))
+
+  (assert (item? b)
+	  (conc "item-equal?: b argument must be an item! We got " b))
+
+  (let ((ref-a (item-item-ref a))
+	(ref-b (item-item-ref b)))
+    (and
+      (equal? (item-blob a) (item-blob b))
+      (or (item-ref-equal? ref-a ref-b) ; references are equal
+	  (not (eqv? (item-ref-type ref-a) (item-ref-type ref-b))))))) ; references are not equal but they're of different types anyway
 
 ; Compare items.
 ; They must be equal?. i.e. they must contain the same blob and the same
