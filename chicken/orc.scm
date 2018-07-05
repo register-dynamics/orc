@@ -893,6 +893,13 @@
 	  (conc "require-blob-or-string: obj argument must be a blob or a string! We got " obj))
   obj)
 
+; Type Checker: Expects a blob or a string. If we get NULL then we return #f
+;               otherwise we return the blob or string.
+(define (require-blob-string-or-null obj)
+  (if (null? obj)
+    #f
+    (require-blob-or-string obj)))
+
 ; Type Checker: Expects an integer and returns it.
 (define (require-integer obj)
   (assert (integer? obj)
@@ -944,6 +951,12 @@
 	      (conc "key->string: Keys with non-string parts are not currently supported! We got " key))
       part)))
 
+; Deserialiser: Converts a string with nice lexical semantics to a key.
+(define (string->key str)
+  (assert (string? str)
+	  (conc "string->key: str argument must be a string! We got " str))
+  (make-key str))
+
 ; Serialiser: Converts an srfi-19 date to a UNIX style epoch-indexed integer.
 ; obj must represent a date in UTC so that we don't have to worry about
 ; conversion of future dates; we can let the user do that for now!.
@@ -953,6 +966,13 @@
   (assert (equal? "UTC" (date-zone-name obj))
 	  (conc "date->integer: obj argument must represent a date in UTC! We got " obj))
   (string->number (format-date "~s" obj))) ; (time->seconds (date->time-utc obj)) ; Note that time->seconds can return a ratnum!
+
+; Deserialiser: Converts a UNIX style epoch-index integer to an srfi-19 date.
+(define (integer->date obj)
+  (assert (integer? obj)
+	  (conc "integer->date: obj argument must be an integer! We got " obj))
+  (parameterize ((local-timezone-locale (utc-timezone-locale)))
+		(seconds->date obj)))
 
 
 ;; Operations for the Backing Store
@@ -1126,6 +1146,230 @@
 	(let ((log-id (last-insert-rowid (db-ctx))))
 	  (require-integer log-id))))))
 
+
+; Converts database result sets that describe a number of entries with one row
+; per item per entry into entry objects.
+; query-runner is a procedure of one argument that runs a query that produces
+; rows of the correct type against the database and calls the procedure
+; supplied in its argument for each row.
+; The column produced by the query must be as follows:
+; `(log-id entry-number region key ts item-id blob)
+(define (wide-entry-item-rows->entries register region query-runner)
+  ; Each row is passed to ->entry in turn. The rows are flattened entrys so we
+  ; receive the entry data for every item in the entry. If the entry has no
+  ; items then we should receive a single row for the entry with NULL in the
+  ; item fields. Here we maintain a bit of state between each call so that we
+  ; know when we've finished receiving all the data about a single entry. This
+  ; way, we know when we are able to cons up that entry and start on the next
+  ; one.
+  (let ((log-id   (register-backing-store-ref register))
+	(entries  (make-parameter '())) ; An accumulator that collects the completed entries.
+	(items    (make-parameter '())) ; An accumulator that collects items whilst we wait for the rest before we turn them all into an entry.
+	(last-key (make-parameter #f))  ; The key related to the entry in the previous row. A NULL Key will never be #f: it'll still return #t from key?
+	(last-ts  (make-parameter #f))) ; The timestamp related to the entry in the previous row.
+
+    ; Makes the entry and stashes it if it is not a tombstone.
+    (define (make-and-stash-entry! region key ts items)
+      (if (not (null? items))
+	(entries (cons (apply make-entry region key ts (reverse items)) (entries)))))
+
+
+    (define (->entry log-id* entry-number region* key ts item-id blob)
+
+      (assert (= log-id log-id*)
+	      (conc "entry-store-ref: We asked the database for data from log-id " log-id ". We got " log-id*))
+
+      (assert (eqv? region region*)
+	      (conc "entry-store-ref: We asked the database for data from region " region ". We got " region*))
+
+      (let ((item (if blob
+		    (make-item
+		      blob
+		      (make-item-ref-opaque item-id))
+		    #f)))
+
+	(if (not (last-key))
+	  (begin
+	    ; We're on the first row: initialise stuff
+	    (last-key key)
+	    (last-ts  ts)))
+
+	(if (key-equal? (last-key) key) ; Is this another item for the entry in the previous row?
+	  (begin
+	    ; We're still processing the same entry as before (or we're on the first row).
+
+	    (assert (eqv? region region*)
+		    (conc "entry-store-ref: We got different entry regions for different items for key " key " in log " log-id ". We got " region " and " region*))
+
+	    (assert (date=? (last-ts) ts)
+		    (conc "entry-store-ref: We got different entry timestamps for different items for key " key " in log " log-id ". We got " (last-ts) " and " ts))
+
+	    (if item
+	      (begin
+
+		(assert (not (null? item))
+			(conc "entry-store-ref: We got a null item when we already had some items for key " key ". We already had " (items)))
+
+		(items (cons item (items)))))) ; Stash the item
+	  (begin
+	    ; We've come to the end of the previous entry.
+
+	    (assert (eqv? region region*)
+		    (conc "entry-store-ref: We got different entry regions for different keys " (last-key) " and " key " in log " log-id ". We got " region " and " region*))
+
+	    (make-and-stash-entry! region (last-key) (last-ts) (items)) ; Stash the completed entry
+	    (items '())                                                 ; Reset items
+	    (if item (items (cons item (items))))                       ; Stash the new item
+	    (last-key key)                                              ; Stash the new key
+	    (last-ts  ts))))                                            ; Stash the new ts
+
+      #f)
+
+
+    (let ((_ (query-runner ->entry)))
+      ; After ->entry finishes doing its work for each database row, the last entry is still stashed in the accumulator.
+      (make-and-stash-entry! region (last-key) (last-ts) (items))
+      (items '())
+      (last-key #f)
+      (last-ts #f)
+      (reverse (entries))))) ; Return the entries in the order we received them from the database (whatever that is).
+
+; Select entries in the Backing Store by key.
+; Performs a range query on the entrys table and returns a list of entrys
+; containing the latest entry at the specified version number for each key it
+; finds.
+; Tombstones are not visible through this interface. i.e. If the latest entry
+; for a particular key has no items then it will not appear at all in the
+; result set.
+(define entry-store-key-ref
+
+  (let ((select-entry-by-key
+	  (make-query
+#<<END
+	    SELECT
+	    "entrys"."log-id"       AS "log-id",
+	    "entrys"."entry-number" AS "entry-number",
+	    "entrys"."region"       AS "region",
+	    "entrys"."key"          AS "key",
+	    "entrys"."timestamp"    AS "timestamp",
+	    "entry-items"."item-id" AS "item-id",
+	    "items"."blob"          AS "blob"
+
+	    FROM
+	    (SELECT
+	      MAX("entry-number") AS "entry-number",
+	      "key"
+	      FROM "entrys"
+	      WHERE
+	      "log-id" = ?1 AND
+	      "region" = ?2 AND
+	      "entry-number" <= ?3
+	      AND "key" BETWEEN ?4 AND ?5
+	      GROUP BY "key") AS "specific-entrys"
+
+	    LEFT OUTER JOIN "entrys"
+	    ON
+	    "specific-entrys"."entry-number" = "entrys"."entry-number"
+
+	    LEFT OUTER JOIN "entry-items"
+	    ON
+	    "entrys"."log-id" = "entry-items"."log-id" AND
+	    "entrys"."entry-number" = "entry-items"."entry-number"
+
+	    LEFT OUTER JOIN "items"
+	    ON
+	    "items"."item-id" = "entry-items"."item-id"
+
+	    WHERE
+	    "entrys"."log-id" = ?1;
+END
+	    `(,require-integer ,symbol->string ,require-integer ,key->string ,key->string)                                                            ; (log-id region version key-from key-to)
+	    `(,require-integer ,require-integer ,string->symbol ,string->key ,integer->date ,require-integer-or-null ,require-blob-string-or-null)))) ; (log-id entry-number region key timestamp item-id blob)
+
+
+    (lambda (register region key-a #!optional (key-b key-a))
+
+      (assert (register? register)
+	      (conc "entry-store-key-ref: register argument must be a register! We got " register))
+
+      (assert (symbol? region)
+	      (conc "entry-store-ref: region argument must be a symbol! We got " region))
+
+      (assert (key? key-a)
+	      (conc "entry-store-ref: key-a argument must be a key! We got " key-a))
+
+      (assert (key? key-b)
+	      (conc "entry-store-ref: key-b argument must be a key! We got " key-b))
+
+      (wide-entry-item-rows->entries
+	register
+	region
+	(cut run-query (db-ctx) select-entry-by-key <> (register-backing-store-ref register) region (register-version register) key-a key-b)))))
+
+; Selects the latest entry for every key in the Backing Store.
+; Performs a range query on the entrys table and returns a list of entrys
+; containing the latest entry at the specified version number for each key it
+; finds.
+; Tombstones are not visible through this interface. i.e. If the latest entry
+; for a particular key has no items then it will not appear at all in the
+; result set.
+(define entry-store-keys
+
+  (let ((select-entry-for-keys
+	  (make-query
+#<<END
+	    SELECT
+	    "entrys"."log-id"       AS "log-id",
+	    "entrys"."entry-number" AS "entry-number",
+	    "entrys"."region"       AS "region",
+	    "entrys"."key"          AS "key",
+	    "entrys"."timestamp"    AS "timestamp",
+	    "entry-items"."item-id" AS "item-id",
+	    "items"."blob"          AS "blob"
+
+	    FROM
+	    (SELECT
+	      MAX("entry-number") AS "entry-number",
+	      "key"
+	      FROM "entrys"
+	      WHERE
+	      "log-id" = ?1 AND
+	      "region" = ?2 AND
+	      "entry-number" <= ?3
+	      GROUP BY "key") AS "specific-entrys"
+
+	    LEFT OUTER JOIN "entrys"
+	    ON
+	    "specific-entrys"."entry-number" = "entrys"."entry-number"
+
+	    LEFT OUTER JOIN "entry-items"
+	    ON
+	    "entrys"."log-id" = "entry-items"."log-id" AND
+	    "entrys"."entry-number" = "entry-items"."entry-number"
+
+	    LEFT OUTER JOIN "items"
+	    ON
+	    "items"."item-id" = "entry-items"."item-id"
+
+	    WHERE
+	    "entrys"."log-id" = ?1;
+END
+	    `(,require-integer ,symbol->string ,require-integer)                                                                                      ; (log-id region version)
+	    `(,require-integer ,require-integer ,string->symbol ,string->key ,integer->date ,require-integer-or-null ,require-blob-string-or-null)))) ; (log-id entry-number region key timestamp item-id blob)
+
+
+    (lambda (register region)
+
+      (assert (register? register)
+	      (conc "entry-store-key-ref: register argument must be a register! We got " register))
+
+      (assert (symbol? region)
+	      (conc "entry-store-ref: region argument must be a symbol! We got " region))
+
+      (wide-entry-item-rows->entries
+	register
+	region
+	(cut run-query (db-ctx) select-entry-for-keys <> (register-backing-store-ref register) region (register-version register))))))
 
 ; Adds an entry to the log of the specified Register.
 ; Returns a Register that represents the specified Register with the specified
