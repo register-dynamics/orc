@@ -887,6 +887,18 @@
     #f
     (require-integer obj)))
 
+; Serialiser: Converts #f to 0 and expects a positive integer otherwise.
+(define (positive-integer-or-false->integer obj)
+  (cond
+    ((integer? obj)
+     (assert (> obj 0)
+	     (conc "integer-or-false->integer: obj argument must be an integer greater than 0 or #f! We got " obj))
+     obj)
+    ((eqv? #f obj)  0)
+    (else
+      (assert #f
+	      (conc "integer-or-false->integer: obj argument must be an integer of #f! We got " obj)))))
+
 
 ;; Operations for the Backing Store
 
@@ -1032,6 +1044,32 @@
 		(conc "item-store-add-digest!: Expected 1 row to change when INSERTing item-ref into database. We got " rows-changed))
 
 	#t))))
+
+
+; Allocates a Register in the Backing Store
+; Returns an opaque reference that represents the Register allocated.
+(define register-store-add!
+  (let ((insert-register
+	  (make-query
+	    "INSERT INTO \"registers\" (\"index-of\", \"name\") VALUES (?1, ?2);"
+	    `(,positive-integer-or-false->integer ,identity)
+	    `())))
+
+    (lambda (index-of name)
+
+      (assert (or (eqv? #f index-of) (integer? index-of))
+	      (conc "register-store-add!: index-of argument must be an integer or #f! We got " index-of))
+
+      (assert (string? name)
+	      (conc "register-store-add!: name argument must be a string! We got " name))
+
+      (let ((rows-changed (run-exec (db-ctx) insert-register index-of name)))
+
+	(assert (= 1 rows-changed)
+		(conc "register-store-add!: Expected 1 row to change when INSERTing register into database. We got " rows-changed))
+
+	(let ((log-id (last-insert-rowid (db-ctx))))
+	  (require-integer log-id))))))
 
 
 )
