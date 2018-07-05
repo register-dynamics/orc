@@ -800,6 +800,34 @@
   (fourth query))
 
 
+;; Serialisers, Deserialisers and Type Checkers
+
+; Type Checker: Expects a blob and returns it.
+(define (require-blob obj)
+  (assert (blob? obj)
+	  (conc "require-blob: obj argument must be a blob! We got " obj))
+  obj)
+
+; Type Checker: Expects a blob or a string and returns it.
+(define (require-blob-or-string obj)
+  (assert (or (string? obj) (blob? obj))
+	  (conc "require-blob-or-string: obj argument must be a blob or a string! We got " obj))
+  obj)
+
+; Type Checker: Expects an integer and returns it.
+(define (require-integer obj)
+  (assert (integer? obj)
+	  (conc "require-integer: obj argument must be an integer! We got " obj))
+  obj)
+
+; Type Checker: Expects an integer. If we get NULL then we return #f otherwise
+;               we return the integer.
+(define (require-integer-or-null obj)
+  (if (null? obj)
+    #f
+    (require-integer obj)))
+
+
 ;; Operations for the Backing Store
 
 ; Run a query on the backing store, applying the serialisers, deserialisers and
@@ -845,5 +873,106 @@
 	     (proc arg))
 	   (query-argument-serialisers the-query)
 	   arguments)))
+
+(define (<=1-result results)
+  (case (length results)
+    ((0) #f)
+    ((1) (car results))
+    (else
+      (assert #f
+	      (conc "<=1-result: Expected one result! We got " results)))))
+
+
+; Look up an item in the Backing Store by item-ref.
+; Returns an item if successful, #f if the item could not be found and throws
+; an exception otherwise.
+; TODO: Support returning just an item-ref if that's all we've got. We'd need to switch the order of the LEFT JOIN around!
+(define item-store-ref
+
+  (let ((select-item-by-digest
+	 (make-query
+	  "SELECT \"items\".\"item-id\", \"items\".\"blob\" from \"items\" LEFT JOIN \"item-digests\" ON \"items\".\"item-id\" = \"item-digests\".\"item-id\" WHERE \"item-digests\".\"algorithm\" = ?1 AND \"item-digests\".\"digest\" = ?2;"
+	 `(,symbol->string  ,require-blob)              ; (algorithm digest)
+	 `(,require-integer ,require-blob-or-string)))) ; (item-id   blob)
+
+
+    (lambda (item-ref)
+
+      (define (->item-ref item-id blob)
+	(make-item blob (make-item-ref-opaque item-id)))
+
+      (assert (item-ref? item-ref)
+	      (conc "item-store-ref: item-ref argument must be an item-ref! We got " item-ref))
+
+      (case (item-ref-type item-ref)
+	((digest)
+
+	 (let ((items (run-query (db-ctx) select-item-by-digest ->item-ref (item-ref-algo item-ref) (item-ref-digest item-ref))))
+	   (<=1-result items)))
+
+	(else
+	  (assert #f
+		  (conc "item-store-ref: unsupported item-ref type! We got " (item-ref-type item-ref))))))))
+
+; Add an item to the Backing Store.
+; Returns an item-ref if successful and throws an exception otherwise.
+(define item-store-add!
+  (let ((insert-item
+	  (make-query
+	    "INSERT INTO \"items\" (\"blob\") VALUES (?1);"
+	    `(,require-blob-or-string) ; blob
+	    `())))                     ; nothing
+
+    (lambda (item)
+
+      (assert (item? item)
+	      (conc "item-store-add!: item argument must be an item! We got " item))
+
+      (let ((rows-changed (run-exec (db-ctx) insert-item (item-blob item)))
+	    (item-id      (last-insert-rowid (db-ctx))))
+
+	(assert (= 1 rows-changed)
+		(conc "item-store-add!: Expected 1 row to change when INSERTing item into database. We got " rows-changed))
+
+	(assert (item-item-ref item)
+		(conc "item-store-add!: We currently only support items that already contain an item-ref. We got " item))
+
+	; TODO: transactionalise / savepoint
+	; TODO: if item already exists but ref does not, succeed so that we can
+	;       add or migrate digests later.
+
+	(let* ((ref (item-item-ref item)))
+	  (item-store-add-digest! item-id ref) ; FIXME: here or in register-add-item?? The current arrangement assumes that the ref is always of 'digest type.
+	  (make-item-ref-opaque item-id))))))
+
+
+; Add a 'digest item-ref to the Backing Store.
+; Returns #t if successful and throws an exception otherwise.
+(define item-store-add-digest!
+  (let ((insert-item-digest
+	  (make-query
+	    "INSERT INTO \"item-digests\" (\"item-id\", \"algorithm\", \"digest\") VALUES (?1, ?2, ?3);"
+	    `(,require-integer ,symbol->string ,require-blob)
+	    `())))
+
+    (lambda (item-id item-ref)
+
+      (assert (integer? item-id)
+	      (conc "item-store-add-digest!; item-id argument must be an integer! We got " item-id))
+
+      (assert (item-ref? item-ref)
+	      (conc "item-store-add-digest!: item-ref argument must be an item-ref! We got " item-ref))
+
+      (assert (eqv? 'digest (item-ref-type item-ref))
+	      (conc "item-store-add-digest!: Only 'digest item-refs are currently supported. We got " item-ref))
+
+      (let ((rows-changed (run-exec (db-ctx) insert-item-digest item-id (item-ref-algo item-ref) (item-ref-digest item-ref))))
+
+	(assert (= 1 rows-changed)
+		(conc "item-store-add-digest!: Expected 1 row to change when INSERTing item-ref into database. We got " rows-changed))
+
+	#t))))
+
+
 )
 
