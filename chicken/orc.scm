@@ -100,8 +100,7 @@
 (use extras data-structures srfi-1 ports)
 
 ; Eggs - http://wiki.call-cc.org/chicken-projects/egg-index-4.html
-(use srfi-19 merkle-tree message-digest sha2 sql-de-lite)
-;(use numbers) ; The Sparse Merkle Tree needs some *really* big numbers!
+(use srfi-19 message-digest sha2 sql-de-lite)
 
 
 
