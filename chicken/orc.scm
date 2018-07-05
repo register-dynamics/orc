@@ -122,67 +122,61 @@
 ;; register
 
 ; Allocates a new Register
-(define (make-register db-pool #!optional name)
-  (let* ((id-log    (create-sqlite-backing-store db-pool #f name: (conc name "-log")        digest-algorithm: 'sha-256))
-	 (log       (open-sqlite-backing-store db-pool id-log 0))
-	 (id-system (create-sqlite-backing-store db-pool #t name: (conc name "-map-user")   digest-algorithm: 'sha-256 levels: 256))
-	 (system    (open-sqlite-backing-store db-pool id-system 0))
-	 (id-user   (create-sqlite-backing-store db-pool #t name: (conc name "-map-system") digest-algorithm: 'sha-256 levels: 256))
-	 (user      (open-sqlite-backing-store db-pool id-user 0)))
+(define (make-register #!optional name)
 
-    (create-register
-      `(,id-log ,id-system ,id-user)
-      (make-merkle-tree sha256-primitive log)
-      '() ; FIXME: use merkle-tree not alist! ;(make-merkle-tree sha256-primitive system)
-      '() ; FIXME: use merkle-tree not alist! ;(make-merkle-tree sha256-primitive user)
-      )))
+  (assert name
+	  (conc "make-register: name argument must not be #f as we don't yet support non-persistent Registers!"))
 
-(define (create-register ids log map-system map-user)
+  (let* ((log-id  (register-store-add! #f name))
+	 (version 0))
 
-  (assert (list? ids)
-	  (conc "create-register: ids argument must be a list! We got " ids))
+    ; we need a symbol that tells us the item-format. i.e. json. better still, a validator!
+    ;	should be in terms of region perhaps as system could use non-json or something?
 
-  (assert (every integer? ids)
-	  (conc "create-register: each id in ids argument must be an integer! We got " ids))
+    (create-register log-id version)))
 
-  (assert (merkle-tree? log)
-	  (conc "create-register: log argument must be a merkle-tree! We got " log))
+; Create a register object from a reference to the backing store some version
+; numbers.
+;
+; backing-store-ref
+;   This is an opaque reference that the Backing Store uses to locate the
+;   Register data.
+;
+; version
+;   This is the number of entries in the Register's log that this instantiation
+;   of the register will consider.
+;
+(define (create-register backing-store-ref version)
 
-  `(register ,ids ,log ,map-system ,map-user))
+  (assert backing-store-ref
+	  (conc "create-register: backing-store-ref argument must be specified! We got " backing-store-ref))
+
+  (assert (integer? version)
+	  (conc "create-register: version argument must be an integer! We got " version))
+
+  `(register ,backing-store-ref ,version))
 
 (define (update-register register
 			 #!key
-			 (ids        (register-ids        register))
-			 (log        (register-log        register))
-			 (map-system (register-map-system register))
-			 (map-user   (register-map-user   register)))
-  (create-register ids log map-system map-user))
+			 (backing-store-ref (register-backing-store-ref register))
+			 (version           (register-version           register)))
+  (create-register backing-store-ref version))
 
 (define (register? obj)
   (and
     (list? obj)
-    (= 5 (length obj))
+    (= 3 (length obj))
     (eqv? 'register (car obj))))
 
-(define (register-ids register)
+(define (register-backing-store-ref register)
   (assert (register? register)
-	  (conc "register-id: register argument must be a register! We got " register))
+	  (conc "register-backing-store-ref: register argument must be a register! We got " register))
   (second register))
 
-(define (register-log register)
+(define (register-version register)
   (assert (register? register)
-	  (conc "register-log: register argument must be a register! We got " register))
+	  (conc "register-version: register argument must be a register! We got " register))
   (third register))
-
-(define (register-map-system register)
-  (assert (register? register)
-	  (conc "register-map-system: register argument must be a register! We got " register))
-  (fourth register))
-
-(define (register-map-user register)
-  (assert (register? register)
-	  (conc "register-map-user: register argument must be a register! We got " register))
-  (fifth register))
 
 
 ;; key
@@ -740,14 +734,14 @@
   (alist-ref command commands equal? values))
 
 ; Reads RSF from (current-input-port) and puts it in a Register.
-(define (read-rsf #!optional db-pool name register)
+(define (read-rsf #!optional name register)
 
   (assert (or (eq? #f register) (register? register))
 	  (conc "read-rsf: register argument must be a register! We got " register))
 
   (parameterize ((current-items '()))
     (let loop
-      ((register (or register (make-register db-pool name)))
+      ((register (or register (make-register name)))
        (line     (read-line))
        (line-no  1))
 
