@@ -494,6 +494,29 @@
 
   (entry-store-keys register region))
 
+; Returns a list of entries.
+; Finds the latest entries the the keys that lie lexographically between
+; key-from and key-to, inclusive.
+; Tombstones are not visible through this interface. i.e. If the latest entry
+; for a particular key has no items then it will not appear at all in the
+; result set.
+(define (register-records-range register region key-from key-to)
+
+  (assert (register? register)
+	  (conc "register-record-ref: register argument must be a register. We got " register))
+
+  (assert (or (eqv? 'user   region)
+	      (eqv? 'system region))
+	  (conc "register-record-ref: Only 'system and 'user regions are supported! We got " region))
+
+  (assert (key? key-from)
+	  (conc "register-record-ref: key-from argument must be a key. We got " key-from))
+
+  (assert (key? key-to)
+	  (conc "register-record-ref: key-to argument must be a key. We got " key-to))
+
+  (entry-store-key-ref register region key-from key-to))
+
 ; Returns the latest entry corresponding to the key or #f if there isn't one.
 ; Tombstones are not visible through this interface. i.e. If the latest entry
 ; for a particular key has no items then it will not appear at all in the
