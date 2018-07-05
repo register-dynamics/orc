@@ -745,30 +745,31 @@
   (assert (or (eq? #f register) (register? register))
 	  (conc "read-rsf: register argument must be a register! We got " register))
 
-  (let loop
-    ((register (or register (make-register db-pool name)))
-     (line     (read-line))
-     (line-no  1))
+  (parameterize ((current-items '()))
+    (let loop
+      ((register (or register (make-register db-pool name)))
+       (line     (read-line))
+       (line-no  1))
 
-    (assert (register? register)
-	    (conc "read-rsf: The handler for line " (sub1 line-no) " returned " register " which is not a register!"))
+      (assert (register? register)
+	      (conc "read-rsf: The handler for line " (sub1 line-no) " returned " register " which is not a register!"))
 
-    (cond
-      ((eof-object? line) register)
-      (else
-	(loop
-	  (let* ((commands (string-split line "\t" #t))
-		 (command  (car commands))
-		 (rest     (cdr commands)))
+      (cond
+	((eof-object? line) register)
+	(else
+	  (loop
+	    (let* ((commands (string-split line "\t" #t))
+		   (command  (car commands))
+		   (rest     (cdr commands)))
 
-	    (if (= 1 line-no)
-	      ; First line *must* be an assert-root-hash
-	      (assert (equal? "assert-root-hash" command)
-		      (conc "read-rsf: RSF files must begin with assert-root-hash! We got " line " on line " line-no)))
+	      (if (= 1 line-no)
+		; First line *must* be an assert-root-hash
+		(assert (equal? "assert-root-hash" command)
+			(conc "read-rsf: RSF files must begin with assert-root-hash! We got " line " on line " line-no)))
 
-	    (apply (command->proc command) line-no register rest))
-	  (read-line)
-	  (add1 line-no))))))
+	      (apply (command->proc command) line-no register rest))
+	    (read-line)
+	    (add1 line-no)))))))
 
 
 
