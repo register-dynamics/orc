@@ -206,6 +206,11 @@
     (string? obj)
     (key?    obj)))
 
+(define (key-parts key)
+  (assert (key? key)
+	  (conc "key-parts: key argument must be a key! We got " key))
+  (cdr key))
+
 
 ;; entry
 
@@ -676,6 +681,13 @@
     lst))
 
 
+;; Operations on Dates
+
+(define (string->date* src . fmtstr)
+  (parameterize ((local-timezone-locale (utc-timezone-locale)))
+		(apply string->date src fmtstr)))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; RSF (Register Serialisation Format) parser and stream operations
@@ -718,7 +730,7 @@
 	 (entry     (apply make-entry
 			   (string->symbol region)
 			   (make-key key)
-			   (string->date timestamp "~Y-~m-~dT~H:~M:~SZ")
+			   (string->date* timestamp "~Y-~m-~dT~H:~M:~SZ")
 			   item-refs)))
     (register-append-entry register entry)))
 
@@ -893,6 +905,42 @@
       (assert #f
 	      (conc "integer-or-false->integer: obj argument must be an integer of #f! We got " obj)))))
 
+; Deserialiser: Converts NULL to 0 and expects a positive integer otherwise
+(define (null-or-positive-integer->integer obj)
+  (cond
+    ((null? obj) 0)
+    ((integer? obj)
+     (assert (> obj 0)
+	     (conc "null-or-positive-integer->integer: obj argument must be an integer greater than 0 or '()! We got " obj))
+     obj)
+    (else
+      (assert #f
+	      (conc "null-or-positive-integer->integer: obj argument must be an integer or '()! We got " obj)))))
+
+; Serialiser: Converts a key to a string with nice lexical semantics.
+; The lexical semantics are such that the returned string sorts in the order
+; that one would expect the original keys to sort in.
+(define (key->string key)
+  (assert (key? key)
+	  (conc "key->string: key argument must be a key! We got " key))
+  (let ((parts (key-parts key)))
+    (assert (= 1 (length parts))
+	    (conc "key->string: Keys with not exactly one part are not currently supported! We got " key))
+    (let ((part (car parts)))
+      (assert (string? part)
+	      (conc "key->string: Keys with non-string parts are not currently supported! We got " key))
+      part)))
+
+; Serialiser: Converts an srfi-19 date to a UNIX style epoch-indexed integer.
+; obj must represent a date in UTC so that we don't have to worry about
+; conversion of future dates; we can let the user do that for now!.
+(define (date->integer obj)
+  (assert (date? obj)
+	  (conc "date->integer: obj argument must be an srfi-19 date! We got " obj))
+  (assert (equal? "UTC" (date-zone-name obj))
+	  (conc "date->integer: obj argument must represent a date in UTC! We got " obj))
+  (string->number (format-date "~s" obj))) ; (time->seconds (date->time-utc obj)) ; Note that time->seconds can return a ratnum!
+
 
 ;; Operations for the Backing Store
 
@@ -1066,5 +1114,64 @@
 	  (require-integer log-id))))))
 
 
+; Adds an entry to the log of the specified Register.
+; Returns a Register that represents the specified Register with the specified
+; entry appended.
+(define entry-store-add
+  (let ((max-entry-number
+	  (make-query
+	    "SELECT MAX(\"entry-number\") FROM \"entrys\" WHERE \"log-id\" = ?1;"
+	    `(,require-integer)
+	    `(,null-or-positive-integer->integer)))
+	(insert-entry
+	  (make-query
+	    "INSERT INTO \"entrys\" (\"log-id\", \"entry-number\", \"region\", \"key\", \"timestamp\") VALUES (?1, ?2, ?3, ?4, ?5);"
+	    `(,require-integer ,require-integer ,symbol->string ,key->string ,date->integer)
+	    `()))
+	(insert-entry-items
+	  (make-query
+	    "INSERT INTO \"entry-items\" (\"log-id\", \"entry-number\", \"item-id\") VALUES (?1, ?2, ?3);"
+	    `(,require-integer ,require-integer ,require-integer)
+	    '())))
+
+    (lambda (register entry)
+
+      (let* ((log-id       (register-backing-store-ref register))
+	     (version      (register-version           register))
+	     (max-version  (<=1-result (run-query (db-ctx) max-entry-number identity log-id)))
+	     (entry-number (add1 max-version)))
+
+	(assert (= max-version version)
+		(conc "entry-store-add: We can only add entrys to the latest version of a Register! We got " version " but " register " could be at " max-version))
+
+	; Add the entry to the entrys table.
+	(let ((rows-changed (run-exec (db-ctx) insert-entry log-id entry-number (entry-region entry) (entry-key entry) (entry-ts entry))))
+
+	 (assert (= 1 rows-changed)
+	  (conc "entry-store-add: Expected 1 row to change when INSERTing entry into database. We got " rows-changed)))
+
+	; Add the entry-items to the entry-items table.
+	(for-each
+	 (lambda (item-ref)
+
+	   (assert (item-ref? item-ref)
+		   (conc "entry-store-add: All entry-items must be item-refs! We got " (entry-items entry)))
+
+	   (assert (eqv? 'opaque (item-ref-type item-ref))
+		   (conc "entry-store-add: We can only add entrys that use opaque item-refs! We got " (entry-items entry) ))
+
+
+	   (let ((rows-changed (run-exec (db-ctx) insert-entry-items log-id entry-number (item-ref-item-id item-ref))))
+
+	    (assert (= 1 rows-changed)
+	     (conc "entry-store-add: Expected 1 row to change when INSERTing entry-items into database. We got " rows-changed))
+
+	    item-ref))
+	 (entry-items entry))
+
+	(update-register
+	 register
+	 backing-store-ref: log-id
+	 version:           entry-number)))))
 )
 
