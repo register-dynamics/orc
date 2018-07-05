@@ -238,6 +238,14 @@
 
   `(entry ,region ,key ,ts ,items))
 
+(define (update-entry entry
+		      #!key
+		      (region (entry-region entry))
+		      (key    (entry-key    entry))
+		      (ts     (entry-ts     entry))
+		      (items  (entry-items  entry)))
+  (apply make-entry region key ts items))
+
 (define (entry? obj)
   (and
     (list? obj)
@@ -434,41 +442,46 @@
   (assert (entry? entry)
 	  (conc "register-append-entry: entry argument must be an entry! We got " entry))
 
+  ; Returns an opaque item-ref or #f if the supplied item-ref was of type
+  ; 'digest and not found the current scope.
+  (define (item-ref->opaque obj)
+    (case (item-ref-type obj)
+      ((digest)
+       ; TODO: add obj if it's not found and is an item rather than an item-ref??
+       (current-items-ref obj))
+      ((opaque) obj)
+      (else
+	(assert #f
+		(conc "reigster-append-entry: Got an item-ref of unknown type! We got " obj)))))
 
-  (let ((log (register-log register))
-	(map (region->map (entry-region entry) register)))
+  ; prepare the entry by ensuring that we have opaque item-refs in the item list
+  ; pass it to entry-store add
+  ; return the register that entry-store-add gives us
+  (entry-store-add
+    register
+    (update-entry
+      entry
+      items: (map (lambda (obj)
+		    (let ((item-ref (item-ref->opaque
+				      (cond
+					((item-ref? obj) obj)
+					((item?     obj) (item-item-ref obj))
+					(else
+					  (assert #f
+						  (conc "register-append-entry: Got unknown item-or-ref " obj " in item-list for entry " entry)))))))
 
-    (assert map
-	    (conc "register-append-entry: unexpected region in entry " entry))
+		      (assert item-ref ; This happens when the item isn't passed to register-add-item before appearing in an entry passed to register-append-entry.
+			      (conc "register-append-entry: 'digest reference of item " obj " could not be resolved to an item in the current scope. Whilst processing entry " entry))
 
-    (for-each
-      (lambda (item)
-	(let ((item-ref (cond
-			  ((item-ref? item) item)
-			  ((item?     item) (item-item-ref item))
-			  (else
-			    (assert #f
-				    (conc "register-append-entry: Got unknown item-or-ref " item " in item-list for entry " entry))))))
+		      (assert (eqv? 'opaque (item-ref-type item-ref))
+			      (conc "register-append-entry: Got a reference to an item that did not resolve to an 'opaque item-ref! We got " obj " that resolved to " item-ref " whilst processing entry " entry))
 
-	  ; TODO: add item if it's not found and is an item rather than an item-ref??
-	  ; Ensure that the referenced item is in the item stash!
-	  (assert (current-items-ref item-ref)
-		  (conc "register-append-entry: Got a reference to an unknown item " item " whilst processing " entry))))
-      (entry-items entry))
+		      (assert (current-items-ref item-ref) ; This happens when we get an opaque, possibly valid, reference to an item that isn't in the current scope.
+			      (conc "register-append-entry: Got a reference to an item " obj " that was not declared in the current scope whilst processing " entry))
 
-    ; TODO: ensure that we write all the items as refs, not as full items!
-    (let ((new-log (merkle-tree-update (merkle-tree-size log) (with-output-to-string (cut write entry)) log))
-	  ;(new-map (merkle-tree-update <hash-of-key>          (with-output-to-string (cut write <get-the-item-itself>)) map))
-	  (new-map (if (= 0 (length (entry-items entry)))
-		     (alist-delete (entry-key entry)       map key-equal?) ; Remove tombstones from the record set
-		     (alist-update (entry-key entry) entry map key-equal?))))
-      (update-register
-	register
-	log: new-log
-	(case (entry-region entry)
-	       ((system) map-system:)
-	       ((user)   map-user:))
-	new-map))))
+		      item-ref))
+		  (entry-items entry)))))
+
 
 ; TODO: probably best to rework this as an iterator interface!
 ; Returns a list of entries.
