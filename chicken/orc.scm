@@ -402,25 +402,28 @@
 	  (conc "register-add-item: item argument must be an item. We got " item))
 
 
-  (let* ((item-ref      (item-item-ref item))
-	 (existing-item (current-items-ref item-ref)))
+  (let* ((item-ref      (item-item-ref  item))
+	 (existing-item (item-store-ref item-ref)))
 
     (if existing-item
       (cond
 	((item? existing-item)
 	 ; Items need to be equal? rather than eqv? because we don't currently know how to merge references of different types in the item structure.
-	 (assert (item-equal? item existing-item)
+	 (assert (item-eqv? item existing-item)
 		 (conc "register-add-item: Found an equivalent item in current items but items do not match! item: " item " , existing-item: " existing-item))
+	 (current-items-update! item (item-item-ref existing-item)) ; Make it available in the current scope.
 	 register)
 	((item-ref? existing-item)
-	 (current-items-update! item)
-	 register)
+	 (let ((item-store-ref (item-store-add! item))) ; Add it to the Backing Store.
+	   (current-items-update! item item-store-ref) ; Make it available in the current scope.
+	   register))
 	(else
 	  (assert #f
 		  (conc "register-add-item: Whilst looking for " item ", we found an unexpected item in current-items: " existing-item))))
       (begin
-	(current-items-update! item)
-	register))))
+	(let ((item-store-ref (item-store-add! item))) ; Add it to the Backing Store.
+	  (current-items-update! item item-store-ref) ; Make it available in the current scope.
+	  register)))))
 
 ; An entry serialises to json like this:
 ; {"index-entry-number":"1","entry-number":"1","entry-timestamp":"2016-04-05T13:23:05Z","key":"SU","item-hash":["sha-256:e94c4a9ab00d951dadde848ee2c9fe51628b22ff2e0a88bff4cca6e4e6086d7a"]}
@@ -544,16 +547,51 @@
 ;; Operations on Items
 
 ; TODO: make sure this is threadsafe!
-; This is an alist mapping item-refs to items.
+; This is an alist of item-refs that we have seen. It maps to and from the
+; 'digest form and the 'opaque form. We could use the Backing Store were it not
+; for the requirement that we keep track of which items and item-refs we've
+; seen in the "current scope".
+; We can't currently handle the same item referred to by more than one distinct
+; 'digest item-ref.
+
+; This is the list of item-refs seen in the current context. i.e. rsf file.
 (define current-items
-  '())
+  (make-parameter '()))
 
 (define (current-items-ref item-ref)
-  (alist-ref item-ref current-items item-ref-equal? #f))
+  (alist-ref item-ref (current-items) item-ref-equal?))
 
-(define (current-items-update! item)
-  (set! current-items
-    (alist-update (item-item-ref item) item current-items item-ref-equal?)))
+(define (current-items-update! item item-store-ref)
+
+  (assert (item? item)
+	  (conc "current-item-update!: item argument must be an item! We got " item))
+
+  ; FIXME: Really we require one 'digest and one 'opaque but for now we require
+  ;        each one to be in a specific place rather than handling it more
+  ;        elegantly. To fix this we'd need to support mapping from one 'opaque
+  ;        to one or more 'digests.
+  (assert (eqv? 'digest (item-ref-type (item-item-ref item)))
+	  (conc "current-item-update!: item argument must contain a 'digest item-ref! We got " item))
+
+  (assert (eqv? 'opaque (item-ref-type item-store-ref))
+	  (conc "current-item-update!: item-store-ref argument must contain an 'opaque item-ref! We got " item-store-ref))
+
+  (current-items-update!* (item-item-ref item) item-store-ref)
+  (current-items-update!* item-store-ref     (item-item-ref item)))
+
+(define (current-items-update!* item-ref-a item-ref-b)
+
+  (let ((existing (current-items-ref item-ref-a)))
+    (if existing
+      (begin
+	(fprintf (current-error-port) "WARNING: item ~A has already been declared in this scope!\n" item-ref-a)
+	(assert (item-ref-equal? existing item-ref-b)
+		(conc "current-items-update!*: item ~A has already been defined as " existing " but we're being asked to redefine it as " item-ref-b))
+	(current-items))
+      (begin
+	(current-items
+	  (alist-update item-ref-a item-ref-b (current-items) item-ref-equal?))
+	(current-items)))))
 
 (define (blob->item-ref blob #!optional (algo 'sha-256))
 
@@ -637,7 +675,7 @@
 	 ; How lazy do we want to be?
 	 ; How easy would it be to do given that the accessor actually returns a list of items?
 	 ; What if the item-ref returns an item-ref? What if we resolve it and that results in an infinite loop?
-	 (current-items-ref item-or-ref))
+	 (item-store-ref item-or-ref))
 	(else
 	  (assert #f
 		  (conc "resolve-items: unexpected item-ish " item-or-ref)))))
