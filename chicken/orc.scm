@@ -410,10 +410,8 @@
   (assert (register? register)
 	  (conc "register-add-item: register argument must be a register. We got " register))
 
-
   (assert (item? item)
 	  (conc "register-add-item: item argument must be an item. We got " item))
-
 
   (let* ((item-ref      (item-item-ref  item))
 	 (existing-item (item-store-ref item-ref)))
@@ -973,6 +971,19 @@
       (assert #f
 	      (conc "null-or-positive-integer->integer: obj argument must be an integer or '()! We got " obj)))))
 
+; Type Checker: Expects a string and returns it.
+(define (require-string obj)
+  (assert (string? obj)
+	  (conc "require-string: obj argument must be a string! We got " obj))
+  obj)
+
+; Type Checker: Expects a string. If we get NULL then we return #f otherwise we
+;               return the string
+;(define (require-string-or-null obj)
+;  (if (null? obj)
+;    #f
+;    (require-string obj)))
+
 ; Serialiser: Converts a key to a string with nice lexical semantics.
 ; The lexical semantics are such that the returned string sorts in the order
 ; that one would expect the original keys to sort in.
@@ -1163,7 +1174,7 @@
   (let ((insert-register
 	  (make-query
 	    "INSERT INTO \"registers\" (\"index-of\", \"name\") VALUES (?1, ?2);"
-	    `(,positive-integer-or-false->integer ,identity)
+	    `(,positive-integer-or-false->integer ,require-string)
 	    `())))
 
     (lambda (index-of name)
