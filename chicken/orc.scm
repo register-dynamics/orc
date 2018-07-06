@@ -63,6 +63,8 @@
 	 ; operations
 
 	 make-key
+	 string->key
+	 key->string
 	 key?
 	 key-equal?
 	 key<?
