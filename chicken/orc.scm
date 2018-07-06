@@ -1168,6 +1168,47 @@
 	#t))))
 
 
+; Finds a Register in the Backing Store by name
+; Returns a register object for the Register at the latest version or #f if the
+; Register cannot be found.
+(define register-store-ref
+  (let ((select-register-by-name
+	  (make-query
+#<<END
+	    SELECT
+	    "registers"."log-id" AS "log-id",
+	    MAX("entrys"."entry-number") AS "version"
+	    FROM
+	    "registers"
+
+	    LEFT OUTER JOIN "entrys"
+	    ON
+	    "registers"."log-id" = "entrys"."log-id"
+
+	    WHERE
+	    "registers"."index-of" = ?1
+	    AND "registers"."name" = ?2;
+END
+	    `(,positive-integer-or-false->integer ,require-string)            ; (index-of name)
+	    `(,require-integer-or-null ,null-or-positive-integer->integer)))) ; (log-id version)
+    ; we use require-integer-or-null to deserialise log-id because in the case where the name is not found we get a single row of NULLs in the Result Set
+
+    (lambda (index-of name)
+
+      (define (->register log-id version)
+	(if log-id
+	  (create-register log-id version)
+	  #f))
+
+      (assert (or (eqv? #f index-of) (integer? index-of))
+	      (conc "register-store-ref: index-of argument must be an integer or #f! We got " index-of))
+
+      (assert (string? name)
+	      (conc "register-store-ref: name argument must be a string! We got " name))
+
+      (let ((registers (run-query (db-ctx) select-register-by-name ->register index-of name)))
+	(<=1-result registers)))))
+
 ; Allocates a Register in the Backing Store
 ; Returns an opaque reference that represents the Register allocated.
 (define register-store-add!
