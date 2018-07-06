@@ -51,6 +51,7 @@
 	 ; Registers
 	 make-register
 	 open-register
+	 list-registers
 	 register?
 	 register-root-digest
 	 register-add-item
@@ -419,6 +420,10 @@
 	  (assert #f
 		  (conc "open-register: Register " name " was requested at version " version " but the latest version we found was " (register-version register)))))
       #f)))
+
+; Returns a an alist of Registers mapping name string to register objects
+(define (list-registers)
+  (register-store-registers))
 
 (define (register-root-digest register)
 
