@@ -992,6 +992,18 @@
       (assert #f
 	      (conc "integer-or-false->integer: obj argument must be an integer of #f! We got " obj)))))
 
+; Deserialiser: Converts 0 to #f and expects a positive integer otherwise.
+(define (positive-integer-or-zero->integer-or-false obj)
+  (if (integer? obj)
+    (cond
+      ((= 0 obj) #f)
+      ((> obj 0) obj)
+      (else
+	(assert #f
+		(conc "positive-integer-or-zero->integer-or-false: obj argument must be an integer greater than or equal to 0. We got " obj))))
+    (assert #f
+	    (conc "positive-integer-or-zero->integer-or-false: obj argument must be an integer greater than or equal to 0. We got " obj))))
+
 ; Deserialiser: Converts NULL to 0 and expects a positive integer otherwise
 (define (null-or-positive-integer->integer obj)
   (cond
@@ -1241,6 +1253,47 @@ END
 
       (let ((registers (run-query (db-ctx) select-register-by-name ->register index-of name)))
 	(<=1-result registers)))))
+
+; Finds all the Registers that we know about.
+; This returns an alist that maps name strings to register objects. The
+; register objects are always opened at the latest version.
+(define register-store-registers
+  (let ((select-registers
+	  (make-query
+#<<END
+	    SELECT
+	    "registers"."log-id"         AS "log-id",
+	    "registers"."index-of"       AS "index-of",
+	    "registers"."name"           AS "name",
+	    MAX("entrys"."entry-number") AS "version"
+
+	    FROM
+	    "registers"
+
+	    LEFT OUTER JOIN "entrys"
+	    ON
+	    "registers"."log-id" = "entrys"."log-id"
+
+	    WHERE
+	    "registers"."index-of" = 0
+
+	    GROUP BY "registers"."log-id";
+END
+	    `()
+	    `(,require-integer ,positive-integer-or-zero->integer-or-false ,require-string ,null-or-positive-integer->integer)))) ; (log-id index-of name version)
+    ; We use require-integer to deserialise the log-id because in the case where nothing is found, we get a Result Set of zero rows.
+
+    (lambda ()
+
+      (define (->register log-id index-of name version)
+
+	(assert (eqv? #f index-of)
+		(conc "register-store-indexes: We asked the database for Regisers that aren't an index of anything. We got an index of " index-of " with log-id " log-id " and name " name " at version " version))
+
+	`(,name ,(create-register log-id version)))
+
+      (let ((registers (run-query (db-ctx) select-registers ->register)))
+	registers))))
 
 ; Allocates a Register in the Backing Store
 ; Returns an opaque reference that represents the Register allocated.
