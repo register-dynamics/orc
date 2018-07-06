@@ -65,6 +65,10 @@
 	 make-key
 	 key?
 	 key-equal?
+	 key<?
+	 key<=?
+	 key>?
+	 key>=?
 	 make-entry
 	 entry?
 	 entry-region
@@ -562,6 +566,46 @@
 	  (conc "key-equal?: b argument must be a key! We got " b))
 
   (equal? a b))
+
+(define (key<? a b)
+
+  (assert (key? a)
+	  (conc "key-<?: a argument must be a key! We got " a))
+
+  (assert (key? b)
+	  (conc "key-<?: b argument must be a key! We got " a))
+
+  (map string<? (key-parts a) (key-parts b)))
+
+(define (key<=? a b)
+
+  (assert (key? a)
+	  (conc "key-<?: a argument must be a key! We got " a))
+
+  (assert (key? b)
+	  (conc "key-<?: b argument must be a key! We got " a))
+
+  (map string<=? (key-parts a) (key-parts b)))
+
+(define (key>? a b)
+
+  (assert (key? a)
+	  (conc "key-<?: a argument must be a key! We got " a))
+
+  (assert (key? b)
+	  (conc "key-<?: b argument must be a key! We got " a))
+
+  (map string>? (key-parts a) (key-parts b)))
+
+(define (key>=? a b)
+
+  (assert (key? a)
+	  (conc "key-<?: a argument must be a key! We got " a))
+
+  (assert (key? b)
+	  (conc "key-<?: b argument must be a key! We got " a))
+
+  (map string>=? (key-parts a) (key-parts b)))
 
 
 ;; Operations on Entrys
