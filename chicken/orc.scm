@@ -50,6 +50,7 @@
 
 	 ; Registers
 	 make-register
+	 open-register
 	 register?
 	 register-root-digest
 	 register-add-item
@@ -386,6 +387,38 @@
 
 
 ;; Operations on Registers
+
+(define (open-register name #!optional version)
+
+  (assert name
+	  (conc "open-register: name argument cannot be #f for persistent Registers!"))
+
+  (if version
+    (assert (integer? version)
+	    (conc "open-register: version argument must be an integer or #f! We got " version)))
+
+  (let ((register (register-store-ref #f name)))
+    (if register
+      (cond
+	((eqv? #f version)
+	 ; We weren't asked for a specific version so return the latest.
+	 register)
+	((= version (register-version register))
+	 ; We were asked for a specific version and it is the latest so return
+	 ; what we were given.
+	 register)
+	((< version (register-version register))
+	 ; We were asked for a specific version and it is earlier than the
+	 ; latest so return that.
+	 (update-register
+	   register
+	   version: version))
+	(else
+	  ; We were asked for a specific version that is newer than the latest
+	  ; we have!
+	  (assert #f
+		  (conc "open-register: Register " name " was requested at version " version " but the latest version we found was " (register-version register)))))
+      #f)))
 
 (define (register-root-digest register)
 
