@@ -714,7 +714,7 @@
 (define (current-items-update! item #!optional item-store-ref)
 
   (assert (item? item)
-	  (conc "current-item-update!: item argument must be an item! We got " item))
+	  (conc "current-items-update!: item argument must be an item! We got " item))
 
   (cond
    ((and item item-store-ref)
@@ -724,10 +724,10 @@
     ;        elegantly. To fix this we'd need to support mapping from one 'opaque
     ;        to one or more 'digests.
     (assert (eqv? 'digest (item-ref-type (item-item-ref item)))
-	    (conc "current-item-update!: item argument must contain a 'digest item-ref! We got " item))
+	    (conc "current-items-update!: item argument must contain a 'digest item-ref! We got " item))
 
     (assert (eqv? 'opaque (item-ref-type item-store-ref))
-	    (conc "current-item-update!: item-store-ref argument must contain an 'opaque item-ref! We got " item-store-ref))
+	    (conc "current-items-update!: item-store-ref argument must contain an 'opaque item-ref! We got " item-store-ref))
 
     (current-items-update!* (item-item-ref item) item-store-ref)
     (current-items-update!* item-store-ref     (item-item-ref item)))
@@ -737,7 +737,7 @@
     ; 'digests) for use in the current scope. This is useful for items read
     ; from the database and returned without ever having needed a 'digest.
     (assert (eqv? 'opaque (item-ref-type (item-item-ref item)))
-	    (conc "current-item-update!: item argument must contain a 'opaque item-ref! We got " item))
+	    (conc "current-items-update!: item argument must contain a 'opaque item-ref! We got " item))
 
     ; Just store #t for now as all the sites that could receive this don't currently use it as anything other than a boolean.
     (current-items-update!* (item-item-ref item) (item-item-ref item)))))
