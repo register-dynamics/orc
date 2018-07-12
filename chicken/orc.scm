@@ -114,6 +114,39 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Macros
+
+; Replace define with define-in-transaction to ensure that the whole procedure
+; is run inside a database transaction.
+; This is for the use of exported API procedures only.
+; When those APIs are called from outside the module it ensures that they are
+; wrapped in a non-nestable transaction. This ensures that the database is
+; committed and therefore, any objects that are returned to the caller are
+; persistent.
+; When those APIs are called from within the module it ensures that there is
+; already a transaction present and then wraps them in a nestable transaction
+; to ensure that they are atomic.
+(define internal-call? (make-parameter #f))
+(define-syntax define-in-transaction
+  (syntax-rules ()
+		((define-in-transaction signature exp exp* ...)
+		 (define signature
+		   (let ((body (lambda () exp exp* ...)))
+		     (if (internal-call?)
+		       (begin
+			 (assert (eq? #f (autocommit? (db-ctx)))
+				 (conc "define-in-transaction: Internal calls to API procedures must already be inside a transaction by we are not!"))
+			 (with-savepoint-transaction
+			   (db-ctx)
+			   body))
+		       (parameterize ((internal-call? #t))
+				     (with-transaction
+				       (db-ctx)
+				       body))))))))
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; ADTs
 
 ;; environment
@@ -130,7 +163,7 @@
 ;; register
 
 ; Allocates a new Register
-(define (make-register #!optional name)
+(define-in-transaction (make-register #!optional name)
 
   (assert name
 	  (conc "make-register: name argument must not be #f as we don't yet support non-persistent Registers!"))
@@ -410,7 +443,7 @@
 
 ;; Operations on Registers
 
-(define (open-register name #!optional version)
+(define-in-transaction (open-register name #!optional version)
 
   (assert name
 	  (conc "open-register: name argument cannot be #f for persistent Registers!"))
@@ -443,10 +476,10 @@
       #f)))
 
 ; Returns a an alist of Registers mapping name string to register objects
-(define (list-registers)
+(define-in-transaction (list-registers)
   (register-store-registers))
 
-(define (register-root-digest register)
+(define-in-transaction (register-root-digest register)
 
   (assert (register? register)
 	  (conc "register-root-digest: register argument must be a register! We got " register))
@@ -464,7 +497,7 @@
 
 ; Adds the specified item to the item pool.
 ; This procedure adds full items. item-refs are not allowed. For that you need register-declare-item.
-(define (register-add-item register item)
+(define-in-transaction (register-add-item register item)
 
   (assert (register? register)
 	  (conc "register-add-item: register argument must be a register. We got " register))
@@ -499,7 +532,7 @@
 
 ; An entry serialises to json like this:
 ; {"index-entry-number":"1","entry-number":"1","entry-timestamp":"2016-04-05T13:23:05Z","key":"SU","item-hash":["sha-256:e94c4a9ab00d951dadde848ee2c9fe51628b22ff2e0a88bff4cca6e4e6086d7a"]}
-(define (register-append-entry register entry)
+(define-in-transaction (register-append-entry register entry)
 
   (assert (register? register)
 	  (conc "register-append-entry: register argument must be a register! We got " register))
@@ -554,7 +587,7 @@
 ; Tombstones are not visible through this interface. i.e. If the latest entry
 ; for a particular key has no items then it will not appear at all in the
 ; result set.
-(define (register-records register region)
+(define-in-transaction (register-records register region)
 
   (assert (register? register)
 	  (conc "register-records: register argument must be a register. We got " register))
@@ -580,7 +613,7 @@
 ; Tombstones are not visible through this interface. i.e. If the latest entry
 ; for a particular key has no items then it will not appear at all in the
 ; result set.
-(define (register-records-range register region key-from key-to)
+(define-in-transaction (register-records-range register region key-from key-to)
 
   (assert (register? register)
 	  (conc "register-record-ref: register argument must be a register. We got " register))
@@ -610,7 +643,7 @@
 ; Tombstones are not visible through this interface. i.e. If the latest entry
 ; for a particular key has no items then it will not appear at all in the
 ; result set.
-(define (register-record-ref register region key)
+(define-in-transaction (register-record-ref register region key)
 
   (assert (register? register)
 	  (conc "register-record-ref: register argument must be a register. We got " register))
@@ -908,7 +941,7 @@
   (alist-ref command commands equal? values))
 
 ; Reads RSF from (current-input-port) and puts it in a Register.
-(define (read-rsf #!optional name register)
+(define-in-transaction (read-rsf #!optional name register)
 
   (assert (or (eq? #f register) (register? register))
 	  (conc "read-rsf: register argument must be a register! We got " register))
@@ -1219,6 +1252,8 @@
 		((lambda-in-savepoint args exp exp* ...)
 		 ;(lambda args exp exp* ...))))
 		 (lambda args
+		   (assert (eq? #f (autocommit? (db-ctx)))
+			   (conc "lambda-in-savepoint: Calls into the Backing Store expect to already be inside a transaction but we are not!"))
 		   (with-savepoint-transaction
 		     (db-ctx)
 		     (lambda ()
