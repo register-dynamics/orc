@@ -740,19 +740,35 @@
 	    (conc "current-item-update!: item argument must contain a 'opaque item-ref! We got " item))
 
     ; Just store #t for now as all the sites that could receive this don't currently use it as anything other than a boolean.
-    (current-items-update!* (item-item-ref item) (item-item-ref item) warnings: #f))))
+    (current-items-update!* (item-item-ref item) (item-item-ref item)))))
 
-(define (current-items-update!* item-ref-a item-ref-b #!key (warnings #t))
+(define (current-items-update!* item-ref-a item-ref-b)
 
   (let ((existing (current-items-ref item-ref-a)))
-    (if existing
-      (begin
-	(if warnings
-	  (fprintf (current-error-port) "WARNING: item ~A has already been declared in this scope!\n" item-ref-a))
-	(assert (or (and (eqv? #t existing) (eqv? #t item-ref-b)) (item-ref-equal? existing item-ref-b))
-		(conc "current-items-update!*: item ~A has already been defined as " existing " but we're being asked to redefine it as " item-ref-b))
+    (cond
+      ((and existing (item-ref-equal? item-ref-a existing))
+       ; This is the case where the item-ref currently maps to itself. We're
+       ; now being given an opportunity to learn about one of its digests so
+       ; let's seize it!
+       (assert (eqv? 'opaque (item-ref-type existing))
+	       (conc "current-items-update!*: item-ref " existing " current maps to itself but is not 'opaque!"))
+
+       (assert (eqv? 'digest (item-ref-type item-ref-b))
+	       (conc "current-items-update!*: We're being asked to associate " item-ref-a " that we already know about with " item-ref-b " but the new item-ref is not a 'digest."))
+
+       (current-items
+	 (alist-update item-ref-a item-ref-b (current-items) item-ref-equal?))
+       (current-items))
+
+      (existing
+	; The item already exists and we might be being asked to associate it with something else.
+	(fprintf (current-error-port) "WARNING: item ~A has already been declared in this scope!\n" item-ref-a)
+	(assert (item-ref-equal? existing item-ref-b)
+		(conc "current-items-update!*: item-ref " item-ref-a " has already been defined as " existing " but we're being asked to redefine it as " item-ref-b))
 	(current-items))
-      (begin
+
+      (else
+	; The item doesn't already exist.
 	(current-items
 	  (alist-update item-ref-a item-ref-b (current-items) item-ref-equal?))
 	(current-items)))))
