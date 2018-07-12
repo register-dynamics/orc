@@ -1208,6 +1208,22 @@
       (assert #f
 	      (conc "<=1-result: Expected one result! We got " results)))))
 
+; Replace lambda with lambda-in-savepoint to ensure that the whole procedure
+; is run inside a database savepoint transaction.
+; This is for the use of the Backing Store procedures only. It wraps calls to
+; Backing Store procedures in a savepoint transaction to ensure that they are
+; atomic but the Backing Store interface requires that we are already inside a
+; existing transaction so that the orc operations as a whole are transactional.
+(define-syntax lambda-in-savepoint
+  (syntax-rules ()
+		((lambda-in-savepoint args exp exp* ...)
+		 ;(lambda args exp exp* ...))))
+		 (lambda args
+		   (with-savepoint-transaction
+		     (db-ctx)
+		     (lambda ()
+		       exp exp* ...))))))
+
 
 ; Look up an item in the Backing Store by item-ref.
 ; Returns an item if successful, #f if the item could not be found and throws
@@ -1222,7 +1238,7 @@
 	 `(,require-integer ,require-blob-or-string)))) ; (item-id   blob)
 
 
-    (lambda (item-ref)
+    (lambda-in-savepoint (item-ref)
 
       (define (->item-ref item-id blob)
 	(make-item blob (make-item-ref-opaque item-id)))
@@ -1249,7 +1265,7 @@
 	    `(,require-blob-or-string) ; blob
 	    `())))                     ; nothing
 
-    (lambda (item)
+    (lambda-in-savepoint (item)
 
       (assert (item? item)
 	      (conc "item-store-add!: item argument must be an item! We got " item))
@@ -1279,18 +1295,21 @@
 	    `(,require-integer ,symbol->string ,require-blob)
 	    `())))
 
-    (lambda (item-id item-ref)
+    (lambda-in-savepoint (item-ref-opaque item-ref-digest*)
 
-      (assert (integer? item-id)
-	      (conc "item-store-add-digest!; item-id argument must be an integer! We got " item-id))
+      (assert (item-ref? item-ref-opaque)
+	      (conc "item-store-add-digest!; item-ref-opaque argument must be an item-ref! We got " item-ref-opaque))
 
-      (assert (item-ref? item-ref)
-	      (conc "item-store-add-digest!: item-ref argument must be an item-ref! We got " item-ref))
+      (assert (eqv? 'opaque (item-ref-type item-ref-opaque))
+	      (conc "item-store-add-digest!: item-ref-opaque argument must be an item-ref! We got " item-ref-opaque))
 
-      (assert (eqv? 'digest (item-ref-type item-ref))
-	      (conc "item-store-add-digest!: Only 'digest item-refs are currently supported. We got " item-ref))
+      (assert (item-ref? item-ref-digest*)
+	      (conc "item-store-add-digest!: item-ref-digest argument must be an item-ref! We got " item-ref-digest*))
 
-      (let ((rows-changed (run-exec (db-ctx) insert-item-digest item-id (item-ref-algo item-ref) (item-ref-digest item-ref))))
+      (assert (eqv? 'digest (item-ref-type item-ref-digest*))
+	      (conc "item-store-add-digest!: Only 'digest item-refs are currently supported. We got " item-ref-digest*))
+
+      (let ((rows-changed (run-exec (db-ctx) insert-item-digest (item-ref-item-id item-ref-opaque) (item-ref-algo item-ref-digest*) (item-ref-digest item-ref-digest*))))
 
 	(assert (= 1 rows-changed)
 		(conc "item-store-add-digest!: Expected 1 row to change when INSERTing item-ref into database. We got " rows-changed))
@@ -1323,7 +1342,7 @@ END
 	    `(,require-integer-or-null ,null-or-positive-integer->integer)))) ; (log-id version)
     ; we use require-integer-or-null to deserialise log-id because in the case where the name is not found we get a single row of NULLs in the Result Set
 
-    (lambda (index-of name)
+    (lambda-in-savepoint (index-of name)
 
       (define (->register log-id version)
 	(if log-id
@@ -1368,7 +1387,7 @@ END
 	    `(,require-integer ,positive-integer-or-zero->integer-or-false ,require-string ,null-or-positive-integer->integer)))) ; (log-id index-of name version)
     ; We use require-integer to deserialise the log-id because in the case where nothing is found, we get a Result Set of zero rows.
 
-    (lambda ()
+    (lambda-in-savepoint ()
 
       (define (->register log-id index-of name version)
 
@@ -1389,7 +1408,7 @@ END
 	    `(,positive-integer-or-false->integer ,require-string)
 	    `())))
 
-    (lambda (index-of name)
+    (lambda-in-savepoint (index-of name)
 
       (assert (or (eqv? #f index-of) (integer? index-of))
 	      (conc "register-store-add!: index-of argument must be an integer or #f! We got " index-of))
@@ -1546,7 +1565,7 @@ END
 	    `(,require-integer ,require-integer ,string->symbol ,string->key ,integer->date ,require-integer-or-null ,require-blob-string-or-null)))) ; (log-id entry-number region key timestamp item-id blob)
 
 
-    (lambda (register region key-a #!optional (key-b key-a))
+    (lambda-in-savepoint (register region key-a #!optional (key-b key-a))
 
       (assert (register? register)
 	      (conc "entry-store-key-ref: register argument must be a register! We got " register))
@@ -1617,7 +1636,7 @@ END
 	    `(,require-integer ,require-integer ,string->symbol ,string->key ,integer->date ,require-integer-or-null ,require-blob-string-or-null)))) ; (log-id entry-number region key timestamp item-id blob)
 
 
-    (lambda (register region)
+    (lambda-in-savepoint (register region)
 
       (assert (register? register)
 	      (conc "entry-store-key-ref: register argument must be a register! We got " register))
@@ -1650,7 +1669,7 @@ END
 	    `(,require-integer ,require-integer ,require-integer)
 	    '())))
 
-    (lambda (register entry)
+    (lambda-in-savepoint (register entry)
 
       (let* ((log-id       (register-backing-store-ref register))
 	     (version      (register-version           register))
