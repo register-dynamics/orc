@@ -687,31 +687,45 @@
 (define (current-items-ref item-ref)
   (alist-ref item-ref (current-items) item-ref-equal?))
 
-(define (current-items-update! item item-store-ref)
+(define (current-items-update! item #!optional item-store-ref)
 
   (assert (item? item)
 	  (conc "current-item-update!: item argument must be an item! We got " item))
 
-  ; FIXME: Really we require one 'digest and one 'opaque but for now we require
-  ;        each one to be in a specific place rather than handling it more
-  ;        elegantly. To fix this we'd need to support mapping from one 'opaque
-  ;        to one or more 'digests.
-  (assert (eqv? 'digest (item-ref-type (item-item-ref item)))
-	  (conc "current-item-update!: item argument must contain a 'digest item-ref! We got " item))
+  (cond
+   ((and item item-store-ref)
+    ; This is the original behaviour of using current-items to map between 'opaque and 'digest item-refs
+    ; FIXME: Really we require one 'digest and one 'opaque but for now we require
+    ;        each one to be in a specific place rather than handling it more
+    ;        elegantly. To fix this we'd need to support mapping from one 'opaque
+    ;        to one or more 'digests.
+    (assert (eqv? 'digest (item-ref-type (item-item-ref item)))
+	    (conc "current-item-update!: item argument must contain a 'digest item-ref! We got " item))
 
-  (assert (eqv? 'opaque (item-ref-type item-store-ref))
-	  (conc "current-item-update!: item-store-ref argument must contain an 'opaque item-ref! We got " item-store-ref))
+    (assert (eqv? 'opaque (item-ref-type item-store-ref))
+	    (conc "current-item-update!: item-store-ref argument must contain an 'opaque item-ref! We got " item-store-ref))
 
-  (current-items-update!* (item-item-ref item) item-store-ref)
-  (current-items-update!* item-store-ref     (item-item-ref item)))
+    (current-items-update!* (item-item-ref item) item-store-ref)
+    (current-items-update!* item-store-ref     (item-item-ref item)))
 
-(define (current-items-update!* item-ref-a item-ref-b)
+   ((and item (eqv? #f item-store-ref))
+    ; This allows us to declare item-refs with only 'opaque item-refs (no
+    ; 'digests) for use in the current scope. This is useful for items read
+    ; from the database and returned without ever having needed a 'digest.
+    (assert (eqv? 'opaque (item-ref-type (item-item-ref item)))
+	    (conc "current-item-update!: item argument must contain a 'opaque item-ref! We got " item))
+
+    ; Just store #t for now as all the sites that could receive this don't currently use it as anything other than a boolean.
+    (current-items-update!* (item-item-ref item) (item-item-ref item) warnings: #f))))
+
+(define (current-items-update!* item-ref-a item-ref-b #!key (warnings #t))
 
   (let ((existing (current-items-ref item-ref-a)))
     (if existing
       (begin
-	(fprintf (current-error-port) "WARNING: item ~A has already been declared in this scope!\n" item-ref-a)
-	(assert (item-ref-equal? existing item-ref-b)
+	(if warnings
+	  (fprintf (current-error-port) "WARNING: item ~A has already been declared in this scope!\n" item-ref-a))
+	(assert (or (and (eqv? #t existing) (eqv? #t item-ref-b)) (item-ref-equal? existing item-ref-b))
 		(conc "current-items-update!*: item ~A has already been defined as " existing " but we're being asked to redefine it as " item-ref-b))
 	(current-items))
       (begin
