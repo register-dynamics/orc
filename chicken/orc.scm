@@ -561,7 +561,16 @@
 	      (eqv? 'system region))
 	  (conc "register-record-ref: Only 'system and 'user regions are supported! We got " region))
 
-  (entry-store-keys register region))
+  (let ((entries (entry-store-keys register region)))
+    (for-each
+      (lambda (entry)
+	(for-each
+	  (lambda (item)
+	    (if (not (current-items-ref (item-item-ref item)))
+	      (current-items-update! item)))
+	  (entry-items entry)))
+      entries)
+    entries))
 
 ; Returns a list of entries.
 ; Finds the latest entries the the keys that lie lexographically between
@@ -584,7 +593,16 @@
   (assert (key? key-to)
 	  (conc "register-record-ref: key-to argument must be a key. We got " key-to))
 
-  (entry-store-key-ref register region key-from key-to))
+  (let ((entries (entry-store-key-ref register region key-from key-to)))
+    (for-each
+      (lambda (entry)
+	(for-each
+	  (lambda (item)
+	    (if (not (current-items-ref (item-item-ref item)))
+	      (current-items-update! item)))
+	  (entry-items entry)))
+      entries)
+    entries))
 
 ; Returns the latest entry corresponding to the key or #f if there isn't one.
 ; Tombstones are not visible through this interface. i.e. If the latest entry
@@ -605,7 +623,13 @@
   (let ((entries (entry-store-key-ref register region key)))
    (case (length entries)
     ((0) #f)
-    ((1) (car entries))
+    ((1)
+     (for-each
+       (lambda (item)
+	 (if (not (current-items-ref (item-item-ref item)))
+	   (current-items-update! item)))
+       (entry-items (car entries)))
+     (car entries))
     (else
      (assert #f
       (conc "register-record-ref: Expected a single entry but got " entries))))))
