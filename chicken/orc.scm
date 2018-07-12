@@ -485,6 +485,7 @@
 	 register)
 	((item-ref? existing-item)
 	 (let ((item-store-ref (item-store-add! item))) ; Add it to the Backing Store.
+	   (item-store-add-digest! item-store-ref (item-item-ref item)) ; Store the item's digest against the opaque reference returned form item-store-add!
 	   (current-items-update! item item-store-ref) ; Make it available in the current scope.
 	   register))
 	(else
@@ -492,6 +493,7 @@
 		  (conc "register-add-item: Whilst looking for " item ", we found an unexpected item in current-items: " existing-item))))
       (begin
 	(let ((item-store-ref (item-store-add! item))) ; Add it to the Backing Store.
+	  (item-store-add-digest! item-store-ref (item-item-ref item)) ; Store the item's digest against the opaque reference returned form item-store-add!
 	  (current-items-update! item item-store-ref) ; Make it available in the current scope.
 	  register)))))
 
@@ -1265,9 +1267,7 @@
 	; TODO: if item already exists but ref does not, succeed so that we can
 	;       add or migrate digests later.
 
-	(let* ((ref (item-item-ref item)))
-	  (item-store-add-digest! item-id ref) ; FIXME: here or in register-add-item?? The current arrangement assumes that the ref is always of 'digest type.
-	  (make-item-ref-opaque item-id))))))
+	(make-item-ref-opaque item-id)))))
 
 
 ; Add a 'digest item-ref to the Backing Store.
