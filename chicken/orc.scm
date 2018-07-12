@@ -914,6 +914,7 @@
   (parameterize ((current-items '()))
     (let loop
       ((register (or register (make-register name)))
+       (previous-line #f)
        (line     (read-line))
        (line-no  1))
 
@@ -921,7 +922,10 @@
 	      (conc "read-rsf: The handler for line " (sub1 line-no) " returned " register " which is not a register!"))
 
       (cond
-	((eof-object? line) register)
+	((eof-object? line)
+	 (if (not (equal? "assert-root-hash" (car (string-split previous-line "\t" #t))))
+	   (fprintf (current-error-port) "WARNING: RSF file did not end with assert-root-hash! Integrity cannot be confirmed.\n"))
+	 register)
 	(else
 	  (loop
 	    (let* ((commands (string-split line "\t" #t))
@@ -934,6 +938,7 @@
 			(conc "read-rsf: RSF files must begin with assert-root-hash! We got " line " on line " line-no)))
 
 	      (apply (command->proc command) line-no register rest))
+	    line
 	    (read-line)
 	    (add1 line-no)))))))
 
