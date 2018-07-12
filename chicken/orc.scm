@@ -93,6 +93,7 @@
 	 item-ref-type
 	 item-ref-algo
 	 item-ref-digest
+	 item-ref-opaque-evict
 
 	 ; RSF
 	 read-rsf
@@ -377,6 +378,26 @@
 	  (conc "item-ref-item-id: item-ref argument must be an 'opaque item-ref! We got " item-ref))
 
   (first (third item-ref)))
+
+; Evict an opaque item-ref so that users can put them in things like web forms
+; and then compare them to other item-refs in a POST handler. The item-id is
+; supposed to be entirely internal to the Backing Store and is not guranteed to
+; be stable. Therefore we deliberately introduce a bit of instability so that
+; users of the API don't come to rely on them.
+(define item-ref-opaque-evict
+
+  (let ((magic (random 65536)))
+
+    (lambda (item-ref)
+
+      (assert (item-ref? item-ref)
+	      (conc "item-ref-opaque-evict: item-ref argument must be an item-ref! We got " item-ref))
+
+      (assert (eqv? 'opaque (item-ref-type item-ref))
+	      (conc "item-ref-opaque-evict: item-ref argument must be an 'opaque item-ref! We got " item-ref))
+
+      (number->string
+	(bitwise-xor magic (item-ref-item-id item-ref))))))
 
 
 ;; Operations
