@@ -1,0 +1,167 @@
+#!/bin/sh
+#|
+exec time /usr/bin/env csi -ns "$0" -- "$@"
+|#
+; vi: filetype=scheme
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; load-registers - Load Registers from RSF files into orc.
+;;;
+;;; gov.uk Open Registers are a way of expressing an authoritative list that
+;;; you can trust.
+;;;
+;;; This tool loads RSF files individually or in batch into an orc Backing
+;;; Store.
+;;;
+;;;
+;;;  Copyright (C) 2018, Andy Bennett, Register Dynamics Limited.
+;;;  All rights reserved.
+;;;
+;;;  Redistribution and use in source and binary forms, with or without
+;;;  modification, are permitted provided that the following conditions are met:
+;;;
+;;;  Redistributions of source code must retain the above copyright notice, this
+;;;  list of conditions and the following disclaimer.
+;;;  Redistributions in binary form must reproduce the above copyright notice,
+;;;  this list of conditions and the following disclaimer in the documentation
+;;;  and/or other materials provided with the distribution.
+;;;  Neither the name of the author nor the names of its contributors may be
+;;;  used to endorse or promote products derived from this software without
+;;;  specific prior written permission.
+;;;
+;;;  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;;;  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;;;  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;;;  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE
+;;;  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+;;;  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+;;;  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;;;  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+;;;  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+;;;  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+;;;  POSSIBILITY OF SUCH DAMAGE.
+;;;
+;;; Andy Bennett <andyjpb@register-dynamics.co.uk>, 2018/07/13
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use orc)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define *version* "0.1")
+
+
+; We invoke csi with -- to separate the csi command line arguments from ours.
+; This results in us getting -- in the first position of our command line
+; arguments so here we strip them out!
+(assert (equal? "--" (car (command-line-arguments))))
+(command-line-arguments (cdr (command-line-arguments)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define stderr (current-error-port))
+(define stdout (current-output-port))
+
+(define (usage #!optional exit-code)
+  (let ((me (pathname-strip-directory (program-name))))
+    (fprintf stderr "Usage: ~A [ -h | --help ]\n" me)
+    (fprintf stderr "       ~A [ -v | --version ]\n" me)
+    (fprintf stderr "       ~A [ --init ] <rsf-file> [<register-name>]\n" me)
+    (fprintf stderr "       ~A [ --init ] -\n" me)
+    (fprintf stderr "       ~A\n" me)
+    (fprintf stderr "\n")
+    (fprintf stderr "Load named RSF file, or RSF files supplied on stdin, into orc.\n")
+    (fprintf stderr "\n")
+    (fprintf stderr "\n")
+    (when exit-code (exit exit-code))))
+
+(define (banner #!optional exit-code)
+  (printf "load-registers (orc) ~A\n" *version*)
+  (printf "Copyright (C) 2018 Register Dynamics Ltd.\n")
+  (printf "3-clause BSD License.\n")
+  (printf "Software provided \"AS IS\"; NO WARRANTY expressed or implied.\n")
+  (printf "\n")
+  (printf "Written by Andy Bennett <andyjpb@register-dynamics.co.uk>, 2018/07/13\n")
+  (printf "\n")
+  (printf "\n")
+  (when exit-code (exit exit-code)))
+
+
+; Returns #t if arg appears in paramter args.
+; If arg appears in args, removes arg from args.
+(define (arg? arg args)
+  (let ((rv (member arg (args))))
+    (if rv
+      (args (remove (cut equal? arg <>) (args))))
+    rv))
+
+; Shamelessly stolen from awful-server.scm
+(define (cmd-line-arg option args)
+  ;; Returns the argument associated to the command line option OPTION
+  ;; in ARGS or #f if OPTION is not found in ARGS or doesn't have any
+  ;; argument.
+  (let ((val (any (cut string-match (conc option "=(.*)") <>) args)))
+    (and val (cadr val))))
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (load-register-from-rsf-file filename #!optional (register-name filename))
+  (with-input-from-file
+    filename
+    (lambda ()
+      (read-rsf register-name))))
+
+
+(define (load-registers-from-port)
+  (let loop
+    ((line    (read-line))
+     (line-no 1))
+
+    (if (not (eof-object? line))
+      (begin
+	(fprintf (current-error-port) "~A: Loading ~A\n" line-no line)
+	(load-register-from-rsf-file line)
+	(loop (read-line) (add1 line-no))))))
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(let* ((args (make-parameter (command-line-arguments)))
+       (arg? (cut arg? <> args)))
+  (when (or (arg? "-h") (arg? "--help")) (usage 0))
+  (when (or (arg? "-v") (arg? "--version")) (banner 0))
+
+  (when (arg? "--init")
+    (printf "Initialising orc.backing-store.sqlite\n")
+    (initialise-backing-store "orc.backing-store.sqlite"))
+
+
+  (cond
+
+    ((= 2 (length (args)))
+     (load-register-from-rsf-file (first (args)) (second (args)))
+     (fprintf stderr "\n")
+     (fprintf stderr "\n")
+     (exit 0))
+
+    ((or
+       (= 0 (length (args)))
+       (and (= 1 (length (args))) (equal? "-" (first (args)))))
+     (with-input-from-port (current-input-port) load-registers-from-port)
+     (fprintf stderr "\n")
+     (fprintf stderr "\n")
+     (exit 0))
+
+    (else
+      (fprintf stderr "Unknown command line arguments ~A\n" (args))
+      (fprintf stderr "\n")
+      (usage 1))))
+
+
