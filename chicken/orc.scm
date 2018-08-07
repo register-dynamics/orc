@@ -99,6 +99,7 @@
 	 read-rsf
 
 	 ; Backing Stores
+	 open-backing-store
 	 initialise-backing-store
 	 )
 
@@ -982,7 +983,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; SQLite Backing Store
 
-; Initialises an SQLite Database with the appropriate schema.
+; Opens an SQLite Database.
 ;
 ; filename
 ;   Any of:
@@ -993,13 +994,24 @@
 ;
 ;   'memory or 'temporary cannot be used in pools.
 ;
+; If the file does not exist, one is created transparently.
+;
+; Returns a dabase object.
+(define (open-backing-store filename)
+  (open-database filename))
+
+
+; Initialises a database with the appropriate schema.
+;
+; We use the dynamic variable db-ctx to find the database to initialise.
+;
 ; Returns #t if the database was successfully initialised and throws an
 ; exception otherwise.
 ;
 ; There is currently no provision for customising the table names or having
-; more than one backing store per database file.
-(define (initialise-backing-store filename)
-  (let ((db (open-database filename)))
+; more than one backing store per database.
+(define (initialise-backing-store)
+  (let ((db (db-ctx)))
     (with-transaction
       db
       (lambda ()
@@ -1018,7 +1030,7 @@
 	    "CREATE UNIQUE INDEX \"registers-index-of-name\" ON \"registers\" (\"index-of\" ASC, \"name\" ASC);"))
 	#t))))
 
-(define db-ctx (make-parameter (open-database "orc.backing-store.sqlite")))
+(define db-ctx (make-parameter (open-backing-store "orc.backing-store.sqlite")))
 
 ;; ADTs for the Backing Store
 
