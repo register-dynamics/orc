@@ -101,6 +101,7 @@
 	 ; Backing Stores
 	 open-backing-store
 	 initialise-backing-store
+	 with-backing-store
 	 )
 
 
@@ -132,6 +133,7 @@
   (syntax-rules ()
 		((define-in-transaction signature exp exp* ...)
 		 (define signature
+		   (assert (db-ctx) (conc "define-in-transaction: Calls to API procedures must be in the dynamic scope of a valid backing-store. You need to call `with-backing-store` in the correct place!"))
 		   (let ((body (lambda () exp exp* ...)))
 		     (if (internal-call?)
 		       (begin
@@ -1003,7 +1005,8 @@
 
 ; Initialises a database with the appropriate schema.
 ;
-; We use the dynamic variable db-ctx to find the database to initialise.
+; We use the dynamic variable db-ctx to find the database to initialise so you
+; will have to call this inside `with-database`.
 ;
 ; Returns #t if the database was successfully initialised and throws an
 ; exception otherwise.
@@ -1030,7 +1033,11 @@
 	    "CREATE UNIQUE INDEX \"registers-index-of-name\" ON \"registers\" (\"index-of\" ASC, \"name\" ASC);"))
 	#t))))
 
-(define db-ctx (make-parameter (open-backing-store "orc.backing-store.sqlite")))
+(define db-ctx (make-parameter #f))
+
+(define (with-backing-store db thunk)
+  (parameterize ((db-ctx db))
+		(thunk)))
 
 ;; ADTs for the Backing Store
 
