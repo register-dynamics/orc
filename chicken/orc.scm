@@ -1119,6 +1119,14 @@
     #f
     (require-integer obj)))
 
+; Type Checker: Expects an integer greater than zero and returns it.
+(define (require-integer>0 obj)
+  (assert (integer? obj)
+	  (conc "require-integer>0: obj argument must be an integer! We got " obj))
+  (assert (> obj 0)
+	  (conc "require-integer>0: obj argument must be an integer greater than 0! We got " obj))
+  obj)
+
 ; Serialiser: Converts #f to 0 and expects a positive integer otherwise.
 (define (positive-integer-or-false->integer obj)
   (cond
@@ -1615,8 +1623,8 @@ END
 	    WHERE
 	    "entrys"."log-id" = ?1;
 END
-	    `(,require-integer ,symbol->string ,require-integer ,key->string ,key->string)                                                            ; (log-id region version key-from key-to)
-	    `(,require-integer ,require-integer ,string->symbol ,string->key ,integer->date ,require-integer-or-null ,require-blob-string-or-null)))) ; (log-id entry-number region key timestamp item-id blob)
+	    `(,require-integer ,symbol->string    ,require-integer ,key->string ,key->string)                                                           ; (log-id region version key-from key-to)
+	    `(,require-integer ,require-integer>0 ,string->symbol ,string->key ,integer->date ,require-integer-or-null ,require-blob-string-or-null)))) ; (log-id entry-number region key timestamp item-id blob)
 
 
     (lambda-in-savepoint (register region key-a #!optional (key-b key-a))
@@ -1686,8 +1694,8 @@ END
 	    WHERE
 	    "entrys"."log-id" = ?1;
 END
-	    `(,require-integer ,symbol->string ,require-integer)                                                                                      ; (log-id region version)
-	    `(,require-integer ,require-integer ,string->symbol ,string->key ,integer->date ,require-integer-or-null ,require-blob-string-or-null)))) ; (log-id entry-number region key timestamp item-id blob)
+	    `(,require-integer ,symbol->string    ,require-integer)                                                                                     ; (log-id region version)
+	    `(,require-integer ,require-integer>0 ,string->symbol ,string->key ,integer->date ,require-integer-or-null ,require-blob-string-or-null)))) ; (log-id entry-number region key timestamp item-id blob)
 
 
     (lambda-in-savepoint (register region)
