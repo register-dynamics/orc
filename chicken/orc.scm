@@ -1243,6 +1243,98 @@
 	   (query-argument-serialisers the-query)
 	   arguments)))
 
+; Manage running a query on the backing store, applying the serialisers,
+; deserialises and constructors at the appropriate time.
+; This procedure does not run the query itself but provides the caller with a
+; pair of procedures: one for cleanup and an iterator. Calling the iterator
+; will yield the next row from the result set. The cleanup procedure must be
+; called when the caller is done with the query whether or not they exhaust all
+; the rows in the result set.
+; The return values of this procedure must not be passed over a transaction
+; boundary so things that call it directly must not use lambda-in-savepoint or
+; define-in-transaction and things that receive the resulting procedures must
+; be careful in their use of transactions.
+(define (stream-query db the-query constructor . arguments)
+
+  (assert (query? the-query)
+	  (conc "stream-query: query argument must be a query! We got " the-query))
+
+  (assert (procedure? constructor)
+	  (conc "stream-query: constructor argument must be a procedure! We got " constructor))
+
+  (let ((caller '_)) ; The continuation of the person that calls the iterator so we can return to them.
+    (letrec ((orig-cleanup
+	       (lambda ()
+		 #f))
+	     (cleanup ; The procedure that will allow us to exit without consuming all the rows.
+	       orig-cleanup)
+
+	     (next-row
+	       (lambda ()
+		 (apply query
+
+			(lambda (s)
+			  ; call fetch for each row
+			  (let ((row
+				  (call/cc
+				    (lambda (rest-of-results)
+				      (set! next-row (lambda ()
+						       (rest-of-results (fetch s))))
+				      (set! cleanup  (lambda ()
+						       ; Fake the end of the result set so that we fall out the bottom of (apply query ...)
+						       ; We don't actually do any work here other than make the sql-de-lite stuff finalize.
+						       ; All the real cleanup is done in the code that lexographically follows (apply
+						       ; query ...).
+						       ; If more logic is put here, the approach to (set! cleanup orig-cleanup) below might
+						       ; have to change.
+						       (rest-of-results '())))
+
+				      (fetch s)))))
+
+
+			    (if (not (null? row))
+			      ; If there was a row, deserialise it, construct it and return it to the caller of the iterator by jumping to their continuation, if not fall out the bottom of (apply query ...) thus tidying up the database
+			      (caller
+				(apply
+				  constructor
+				  (map
+				    (lambda (proc col)
+				      (proc col))
+				    (query-result-deserialisers the-query)
+				    row))))
+
+			    ; Reset the cleanup procedure: We're going to cleanup right after (apply query ...) finishes,
+			    ; but the user might still call us anyway.
+			    ; This is not strictly necessary but, it is semantically more correct than letting the user
+			    ; call the other cleanup procedure. If it is called, it saves us the effort of falling out of
+			    ; the bottom of (apply query ...) again.
+			    ; We don't do the same for next-row because we want the user to get the "operation on
+			    ; finalized statement" error that results from calling it after cleanup.
+			    (set! cleanup orig-cleanup)
+
+			    'never-seen))
+
+			(sql db (query-string the-query))
+			(map
+			  (lambda (proc arg)
+			    (proc arg))
+			  (query-argument-serialisers the-query)
+			  arguments))
+
+			  (caller 'no-more-rows)))) ; Returns 'cleaned up to the correct caller, however we got here.
+
+      (values ; Return a cleanup procedure and an iterator procedure to the caller of stream-query
+	(lambda () ; The cleanup procedure: start with a dummy one until we start doing things to the database.
+	  (call/cc
+	    (lambda (k)
+	      (set! caller k)
+	      (cleanup))))
+	(lambda () ; The iterator. Each call to this will get the next row from the database.
+	  (call/cc
+	    (lambda (k)
+	      (set! caller k)
+	      (next-row))))))))
+
 ; Run an exec on the backing store, applying the serialisers at the appropriate
 ; time.
 ; Statements that are exec'd rather than query'd don't return a result set so
