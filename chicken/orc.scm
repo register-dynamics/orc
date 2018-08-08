@@ -1517,10 +1517,10 @@ END
     (define (->entry log-id* entry-number region* key ts item-id blob)
 
       (assert (= log-id log-id*)
-	      (conc "entry-store-ref: We asked the database for data from log-id " log-id ". We got " log-id*))
+	      (conc "wide-entry-item-rows->entries: We asked the database for data from log-id " log-id ". We got " log-id*))
 
       (assert (eqv? region region*)
-	      (conc "entry-store-ref: We asked the database for data from region " region ". We got " region*))
+	      (conc "wide-entry-item-rows->entries: We asked the database for data from region " region ". We got " region*))
 
       (let ((item (if blob
 		    (make-item
@@ -1539,23 +1539,23 @@ END
 	    ; We're still processing the same entry as before (or we're on the first row).
 
 	    (assert (eqv? region region*)
-		    (conc "entry-store-ref: We got different entry regions for different items for key " key " in log " log-id ". We got " region " and " region*))
+		    (conc "wide-entry-item-rows->entries: We got different entry regions for different items for key " key " in log " log-id ". We got " region " and " region*))
 
 	    (assert (date=? (last-ts) ts)
-		    (conc "entry-store-ref: We got different entry timestamps for different items for key " key " in log " log-id ". We got " (last-ts) " and " ts))
+		    (conc "wide-entry-item-rows->entries: We got different entry timestamps for different items for key " key " in log " log-id ". We got " (last-ts) " and " ts))
 
 	    (if item
 	      (begin
 
 		(assert (not (null? item))
-			(conc "entry-store-ref: We got a null item when we already had some items for key " key ". We already had " (items)))
+			(conc "wide-entry-item-rows->entries: We got a null item when we already had some items for key " key ". We already had " (items)))
 
 		(items (cons item (items)))))) ; Stash the item
 	  (begin
 	    ; We've come to the end of the previous entry.
 
 	    (assert (eqv? region region*)
-		    (conc "entry-store-ref: We got different entry regions for different keys " (last-key) " and " key " in log " log-id ". We got " region " and " region*))
+		    (conc "wide-entry-item-rows->entries: We got different entry regions for different keys " (last-key) " and " key " in log " log-id ". We got " region " and " region*))
 
 	    (make-and-stash-entry! region (last-key) (last-ts) (items)) ; Stash the completed entry
 	    (items '())                                                 ; Reset items
