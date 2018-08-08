@@ -111,7 +111,7 @@
 (use extras data-structures srfi-1 ports)
 
 ; Eggs - http://wiki.call-cc.org/chicken-projects/egg-index-4.html
-(use srfi-19 message-digest sha2 sql-de-lite)
+(use srfi-19 message-digest sha2 sql-de-lite merkle-tree)
 
 
 
@@ -487,15 +487,37 @@
   (assert (register? register)
 	  (conc "register-root-digest: register argument must be a register! We got " register))
 
+  (let ((tree
+	  (make-merkle-tree
+	    sha256-primitive
+	    (make-backing-store
+	      store: #f
+	      ref:   (lambda (n)
+		       (receive (cleanup next) (entry-store-stream register (add1 n))
+				(let ((v (->string (next))))
+				  (cleanup)
+				  v)))
+	      update: #f
+	      size:   (constantly (register-version register))
+	      levels: (lambda ()
+			(log2-pow2>=n (register-version register)))
+	      count-leaves-in-range: (lambda (start end)
+				       (assert (<= end (register-version register)))
+				       (- end start))
+	      default-leaf: #f))))
+
+   (merkle-tree-hash tree)))
+
+
   ; FIXME: We don't currently have a merkle tree implmentation that we can use
   ; on our backing store so fake the root digest for now. We just need
   ; something that changes as the Register changes so return something based on
   ; the backing store-id and the version number.
-  (string->blob
-    (conc
-      (number->string (register-backing-store-ref register))
-      "root digest "
-      (number->string (register-version register)))))
+;  (string->blob
+;    (conc
+;      (number->string (register-backing-store-ref register))
+;      "root digest "
+;      (number->string (register-version register)))))
 
 
 ; Adds the specified item to the item pool.
