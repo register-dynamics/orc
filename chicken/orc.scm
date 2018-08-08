@@ -1093,6 +1093,12 @@
 	  (conc "require-blob: obj argument must be a blob! We got " obj))
   obj)
 
+; Type Checker: Expects a blob. If we get NULL then we return #f.
+(define (require-blob-or-null obj)
+  (if (null? obj)
+    #f
+    (require-blob obj)))
+
 ; Type Checker: Expects a blob or a string and returns it.
 (define (require-blob-or-string obj)
   (assert (or (string? obj) (blob? obj))
@@ -1956,6 +1962,67 @@ END
 	register
 	region
 	(cut run-query (db-ctx) select-entry-for-keys <> (register-backing-store-ref register) region (register-version register))))))
+
+; Returns a pair of procedures. One that can be called at the end to clean
+; everything up and one that wraps a running query that the caller can call to
+; get entries and their entry-numbers in order until they've had their fill.
+; The first time the procedure is called the entry at the entry number
+; specified in `start` is returned. When there are no more entries at the
+; version of the register specified in `register`, #f is returned.
+; When the caller has taken enough entries, even if they have reached the end,
+; they must call the cleanup procedure.
+; This procedure returns the equivalent of (values cleanup iterator). `cleanup`
+; is first so that the safe thing is likely to happen with callers that only
+; expect one return value.
+(define entry-store-stream
+  (let ((select-entries-in-order
+	  (make-query
+#<<END
+	    SELECT
+	    "entrys"."log-id"       AS "log-id",
+	    "entrys"."entry-number" AS "entry-number",
+	    "entrys"."region"       AS "region",
+	    "entrys"."key"          AS "key",
+	    "entrys"."timestamp"    AS "timestamp",
+	    "entry-items"."item-id" AS "item-id",
+	    "item-digests"."digest" AS "item-digest"
+
+	    FROM
+	    "entrys"
+
+	    LEFT OUTER JOIN "entry-items"
+	    ON
+	    "entrys"."log-id" = "entry-items"."log-id" AND
+	    "entrys"."entry-number" = "entry-items"."entry-number"
+
+	    LEFT OUTER JOIN "item-digests"
+	    ON
+	    "item-digests"."item-id" = "entry-items"."item-id"
+
+	    WHERE
+	    "entrys"."log-id" = ?1
+	    AND "entrys"."entry-number" BETWEEN ?3 AND ?2
+	    AND "item-digests"."algorithm" = "sha-256"
+
+	    ORDER BY "entrys"."entry-number";
+END
+            `(,require-integer ,require-integer   ,require-integer)                                                                               ; (log-id version start)
+	    `(,require-integer ,require-integer>0 , string->symbol ,string->key ,integer->date ,require-integer-or-null ,require-blob-or-null)))) ; (log-id entry-number region key timestamp item-id item-digest)
+
+    (lambda (register #!optional (start 1)) ; We can't use lambda-in-savepoint with stream-query as it returns a running query out of this lexical scope.
+
+      (assert (eq? #f (autocommit? (db-ctx)))
+	      (conc "entry-store-stream: Calls into the Backing Store expect to already be inside a transaction but we are not!"))
+
+      (assert (register? register)
+	      (conc "entry-store-stream: register argument must be a register! We got " register))
+
+      (wide-entry-item-stream->entry-stream
+	register
+	(cut stream-query (db-ctx) select-entries-in-order <> (register-backing-store-ref register) (register-version register) start)
+	(lambda (item-id item-digest) ; Put item-refs in the entry's item list.
+	  (make-item-ref 'sha-256 item-digest))
+	#t))))
 
 ; Adds an entry to the log of the specified Register.
 ; Returns a Register that represents the specified Register with the specified
