@@ -1666,6 +1666,160 @@ END
       (last-ts #f)
       (reverse (entries))))) ; Return the entries in the order we received them from the database (whatever that is).
 
+; Converts database result sets that describe a number of entries with one row
+; per item per entry into entry objects.
+;
+; start-stream is a procedure of one argument that returns a pair of
+; procedures, cleanup and iterator. Each call to iterator produces a row of the
+; correct type against the database and calls the procedure supplied in the
+; argument to start-stream for each row.
+; make-item is a procedure of a variable number of arguments that takes item-id
+; and the extra arguments that the query produces and returns an item or
+; item-ref suitable for inclusion in an entry.
+; The columns produced by the query must be as follows:
+; `(log-id entry-number region key ts item-id ...) where ... signifies a number
+; of optional columns that will be passed to the procedure specified in the
+; make-item argument.
+; include-tombstones is a boolean argument that will determine whether entries
+; containing no items are returned. This should be #t for everything except for
+; record oriented queries.
+;
+; Returns two values, each a procedure. The first is for cleanup, the second an
+; iterator. Calling the iterator will yield two results: the next entry from
+; the result set and its entry number. If there were no rows in the database
+; result set then the iterator returns #f for both its return values. The
+; cleanup procedure must be called when the caller is done with the query
+; whether or not they exhaust all the entries in the result set.
+; The return values of this procedure must not be passed over a transaction
+; boundary so things that call it directly must not use lambda-in-savepoint or
+; define-in-transaction and things that receive the resulting procedures must
+; be careful in their use of transactions.
+; The iterator returns #f when there are no more entries.
+(define (wide-entry-item-stream->entry-stream register start-stream make-item include-tombstones)
+  ; Each row is passed to ->entry in turn. The rows are flattened entrys so we
+  ; receive the entry data for every item in the entry. If the entry has no
+  ; items then we should receive a single row for the entry with NULL in the
+  ; item fields. Here we maintain a bit of state between each call so that we
+  ; know when we've finished receiving all the data about a single entry. This
+  ; way, we know when we are able to cons up that entry and start on the next
+  ; one.
+  (let ((log-id        (register-backing-store-ref register))
+	(entry         (make-parameter #f))  ; A place to stash the completed entry if we want to return it to the user.
+	(items         (make-parameter '())) ; An accumulator that collects items whilst we wait for the rest before we turn them all into an entry.
+	(last-entry-no (make-parameter #f))  ; The entry-number related to the entry in the previous row.
+	(last-region   (make-parameter #f))  ; The region related to the entry in the previous row.
+	(last-key      (make-parameter #f))  ; The key related to the entry in the previous row. A NULL Key will never be #f: it'll still return #t from key?
+	(last-ts       (make-parameter #f))) ; The timestamp related to the entry in the previous row.
+
+    ; Makes the entry and stashes execpt if it's a tombstone and the user
+    ; doesn't want to see them.
+    (define (make-and-stash-entry! region key ts items)
+      (if (or include-tombstones (not (null? items)))
+	(entry (apply make-entry region key ts (reverse items)))
+	#f))
+
+
+    ; Stashes an entry and returns its entry-number when it has a whole one and
+    ; #f otherwise.
+    (define (->entry log-id* entry-number region key ts item-id . item-args)
+
+      (assert (= log-id log-id*)
+	      (conc "wide-entry-item-stream->entry-stream: We asked the database for data from log-id " log-id ". We got " log-id*))
+
+      (let ((item (if item-id
+		    (apply make-item
+			   item-id
+			   item-args)
+		    #f)))
+
+	(if (not (last-entry-no))
+	  (begin
+	    ; We're on the first row: initialise stuff
+	    (last-entry-no entry-number)
+	    (last-region   region)
+	    (last-key      key)
+	    (last-ts       ts)))
+
+	(if (= (last-entry-no) entry-number) ; Is this another item for the entry in the previous row?
+	  (begin
+	    ; We're still processing the same entry as before (or we're on the first row).
+
+	    (assert (eqv? (last-region) region)
+		    (conc "wide-entry-item-stream->entry-stream: We got different entry regions for different items for entry " entry-number " in log " log-id ". We got " (last-region) " and " region))
+
+	    (assert (eqv? (last-key) key)
+		    (conc "wide-entry-item-stream->entry-stream: We got different entry keys for different items for entry " entry-number " in log " log-id ". We got " (last-key) " and " key))
+
+	    (assert (date=? (last-ts) ts)
+		    (conc "wide-entry-item-stream->entry-stream: We got different entry timestamps for different items for entry " entry-number " in log " log-id ". We got " (last-ts) " and " ts))
+
+	    (if item
+	      (begin
+
+		(assert (not (null? item))
+			(conc "wide-entry-item-stream->entry-stream: We got a null item when we already had some items for key " key ". We already had " (items)))
+
+		(items (cons item (items))))) ; Stash the item
+
+	    'entry-not-complete)
+	  (begin
+	    ; We've come to the end of the previous entry.
+
+	    (make-and-stash-entry! (last-region) (last-key) (last-ts) (items)) ; Stash the completed entry
+	    (items '())                                                        ; Reset items
+	    (if item (items (cons item (items))))                              ; Stash the new item
+	    (let ((this-entry-no (last-entry-no)))
+	      (last-entry-no entry-number)                                     ; Stash the new entry-number
+	      (last-region   region)                                           ; Stash the new region
+	      (last-key      key)                                              ; Stash the new key
+	      (last-ts       ts)                                               ; Stash the new ts
+
+	      this-entry-no)))))
+
+
+    (receive (process-cleanup process-next-row) (start-stream ->entry)
+      (letrec ((cleanup
+		 (lambda ()
+		   (set! cleanup (lambda () #f))
+		   (set! next-row
+		     (lambda ()
+		       (error "wide-entry-item-stream->entry-stream: next called after cleanup!")))
+		   (process-cleanup)))
+	       (next-row (lambda () ; The iterator that returns each entry in turn along with its entry-number
+			   ; Return entries until there aren't any more then return #f until cleanup is called and then it should return an error.
+
+			   (let loop ((state (process-next-row)))
+			     ; Proess next row tries to fetch the next row from the database. If
+			     ; there is one it calls ->entry on it and state contains either an
+			     ; entry number or 'entry-not-complete. If we've exhausted all the
+			     ; rows then state contains '().
+			     (case state
+			       ('entry-not-complete
+				(loop (process-next-row)))
+			       ('no-more-rows
+				(process-cleanup) ; We're at the end of the result set: clean up the database. ; This is unnecessary (but harmless) as the lower level cleans up by default.
+				(set! cleanup  (lambda () #f)) ; The caller might call cleanup but there's nothing left to do.
+				(set! next-row (lambda () (values #f #f))) ; The caller hasn't called cleanup yet so just given them #f from now on.
+				; After ->entry finishes doing its work for each database row, the last entry is still stashed in the accumulator.
+				(let ((this-entry-no (last-entry-no)))
+				  (if this-entry-no ; i.e. there were more than zero rows returned from the database.
+				    (begin
+				      (make-and-stash-entry! (last-region) (last-key) (last-ts) (items))
+				      (items '())
+				      (last-entry-no #f)
+				      (last-region   #f)
+				      (last-key      #f)
+				      (last-ts       #f)
+				      (values (entry) this-entry-no))
+				    (values #f #f))))
+			       (else
+				 (values (entry) state)))))))
+	(values
+	  (lambda ()
+	    (cleanup))
+	  (lambda ()
+	    (next-row)))))))
+
 ; Select entries in the Backing Store by key.
 ; Performs a range query on the entrys table and returns a list of entrys
 ; containing the latest entry at the specified version number for each key it
