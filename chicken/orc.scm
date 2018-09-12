@@ -680,20 +680,18 @@
   (assert (key? key)
 	  (conc "register-record-ref: key argument must be a key. We got " key))
 
-  (let ((entries (entry-store-key-ref register region key)))
-   (case (length entries)
-    ((0) #f)
-    ((1)
-     (for-each
-       (lambda (item)
-	 (if (not (current-items-ref (item-item-ref item)))
-	   (current-items-update! item)))
-       (entry-items (car entries)))
-     (car entries))
-    (else
-     (assert #f
-      (conc "register-record-ref: Expected a single entry but got " entries))))))
+  (receive (cleanup next) (entry-store-key-ref register region key)
+		(receive (entry entry-number) (next)
+			(assert (not (next))
+				(conc "register-record-ref: Expected a single entry but got >1"))
+			(cleanup)
 
+			(when entry
+				(for-each (lambda (item)
+					(if (not (current-items-ref (item-item-ref item)))
+						(current-items-update! item)))
+						(entry-items entry)))
+			(values entry entry-number))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Higher level and compound operations on ADTs
@@ -1849,9 +1847,17 @@ END
 	    (next-row)))))))
 
 ; Select entries in the Backing Store by key.
-; Performs a range query on the entrys table and returns a list of entrys
-; containing the latest entry at the specified version number for each key it
-; finds.
+; Performs a range query on the entrys table and returns a pair of procedures.
+; One that can be called at the end to clean everything up and one that wraps a
+; running query that the caller can call to get the latest entry at the
+; specified version number for each key it finds.
+; The first time the procedure is called the entry greater than or equal to the
+; first key is returned. When there are no more entries, for relevant keys, at
+; the version of the register specified in `register`, #f is returned.  When
+; the caller has taken enough entries, even if they have reached the end, they
+; must call the cleanup procedure.  This procedure returns the equivalent of
+; (values cleanup iterator). `cleanup` is first so that the safe thing is
+; likely to happen with callers that only expect one return value.
 ; Tombstones are not visible through this interface. i.e. If the latest entry
 ; for a particular key has no items then it will not appear at all in the
 ; result set.
@@ -1901,24 +1907,29 @@ END
 	    `(,require-integer ,require-integer>0 ,string->symbol ,string->key ,integer->date ,require-integer-or-null ,require-blob-string-or-null)))) ; (log-id entry-number region key timestamp item-id blob)
 
 
-    (lambda-in-savepoint (register region key-a #!optional (key-b key-a))
+    (lambda (register region key-a #!optional (key-b key-a)) ; We can't use lambda-in-savepoint with stream-query as it returns a running query out of this lexical scope.
+
+      (assert (eq? #f (autocommit? (db-ctx)))
+	      (conc "entry-store-key-ref: Calls into the Backing Store expect to already be inside a transaction but we are not!"))
 
       (assert (register? register)
 	      (conc "entry-store-key-ref: register argument must be a register! We got " register))
 
       (assert (symbol? region)
-	      (conc "entry-store-ref: region argument must be a symbol! We got " region))
+	      (conc "entry-store-key-ref: region argument must be a symbol! We got " region))
 
       (assert (key? key-a)
-	      (conc "entry-store-ref: key-a argument must be a key! We got " key-a))
+	      (conc "entry-store-key-ref: key-a argument must be a key! We got " key-a))
 
       (assert (key? key-b)
-	      (conc "entry-store-ref: key-b argument must be a key! We got " key-b))
+	      (conc "entry-store-key-ref: key-b argument must be a key! We got " key-b))
 
-      (wide-entry-item-rows->entries
+      (wide-entry-item-stream->entry-stream
 	register
-	region
-	(cut run-query (db-ctx) select-entry-by-key <> (register-backing-store-ref register) region (register-version register) key-a key-b)))))
+	(cut stream-query (db-ctx) select-entry-by-key <> (register-backing-store-ref register) region (register-version register) key-a key-b)
+	(lambda (item-id blob) ; Put items in the entry's item list.
+	  (make-item blob (make-item-ref-opaque item-id)))
+	#f))))
 
 ; Selects the latest entry for every key in the Backing Store.
 ; Performs a range query on the entrys table and returns a list of entrys
