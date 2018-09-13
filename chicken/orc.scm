@@ -80,6 +80,7 @@
 	 entry-key
 	 entry-ts
 	 entry-items
+	 entry-audit-path
 	 make-item
 	 item?
 	 make-item-ref
@@ -755,6 +756,40 @@
 
 
 ;; Operations on Entrys
+
+; Calculates the audit path for a given entry number,
+; which is the extra hashes required to prove that this entry
+; is in the log.
+(define-in-transaction (entry-audit-path register region key)
+
+  (assert (register? register)
+	  (conc "entry-audit-path: register argument must be a register! We got " register))
+
+;(assert (and (number? entry-number) (> entry-number 0))
+;	(conc "entry-audit-path: entry-number argument must be a number > 0! We got " entry-number))
+
+  (let ((tree
+	  (make-merkle-tree
+	    sha256-primitive
+	    (make-backing-store
+	      store: #f
+	      ref:   (lambda (n)
+		       (receive (cleanup next) (entry-store-stream register (add1 n))
+				(let ((v (->string (next))))
+				  (cleanup)
+				  v)))
+	      update: #f
+	      size:   (constantly (register-version register))
+	      levels: (lambda ()
+			(log2-pow2>=n (register-version register)))
+	      count-leaves-in-range: (lambda (start end)
+				       (assert (<= end (register-version register)))
+				       (- end start))
+	      default-leaf: #f))))
+
+    (receive (_ entry-number) (register-record-ref register region key)
+	     (let* ((path (merkle-audit-path (- entry-number 1) tree)))
+	       (list entry-number (register-version register) path)))))
 
 
 ;; Operations on Items
@@ -2023,7 +2058,7 @@ END
 	    "entrys"."key"          AS "key",
 	    "entrys"."timestamp"    AS "timestamp",
 	    "entry-items"."item-id" AS "item-id",
-	    "item-digests"."digest" AS "item-digest"
+	    "items"."blob"          AS "blob"
 
 	    FROM
 	    "entrys"
@@ -2033,19 +2068,18 @@ END
 	    "entrys"."log-id" = "entry-items"."log-id" AND
 	    "entrys"."entry-number" = "entry-items"."entry-number"
 
-	    LEFT OUTER JOIN "item-digests"
+	    LEFT OUTER JOIN "items"
 	    ON
-	    "item-digests"."item-id" = "entry-items"."item-id"
+	    "items"."item-id" = "entry-items"."item-id"
 
 	    WHERE
 	    "entrys"."log-id" = ?1
 	    AND "entrys"."entry-number" BETWEEN ?3 AND ?2
-	    AND "item-digests"."algorithm" = "sha-256"
 
 	    ORDER BY "entrys"."entry-number";
 END
             `(,require-integer ,require-integer   ,require-integer)                                                                               ; (log-id version start)
-	    `(,require-integer ,require-integer>0 , string->symbol ,string->key ,integer->date ,require-integer-or-null ,require-blob-or-null)))) ; (log-id entry-number region key timestamp item-id item-digest)
+	    `(,require-integer ,require-integer>0 , string->symbol ,string->key ,integer->date ,require-integer-or-null ,require-blob-string-or-null)))) ; (log-id entry-number region key timestamp item-id blob)
 
     (lambda (register #!optional (start 1)) ; We can't use lambda-in-savepoint with stream-query as it returns a running query out of this lexical scope.
 
@@ -2058,8 +2092,8 @@ END
       (wide-entry-item-stream->entry-stream
 	register
 	(cut stream-query (db-ctx) select-entries-in-order <> (register-backing-store-ref register) (register-version register) start)
-	(lambda (item-id item-digest) ; Put item-refs in the entry's item list.
-	  (make-item-ref 'sha-256 item-digest))
+	(lambda (item-id blob) ; Put items in the entry's item list.
+	  (make-item blob (make-item-ref-opaque item-id)))
 	#t))))
 
 ; Adds an entry to the log of the specified Register.
