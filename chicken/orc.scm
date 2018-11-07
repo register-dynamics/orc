@@ -57,6 +57,7 @@
 	 register-add-item
 	 register-append-entry
 	 register-records
+	 register-records-range
 	 register-record-ref
 
 	 ; constructor
