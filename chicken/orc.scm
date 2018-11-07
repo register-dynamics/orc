@@ -641,28 +641,32 @@
 (define-in-transaction (register-records-range register region key-from key-to)
 
   (assert (register? register)
-	  (conc "register-record-ref: register argument must be a register. We got " register))
+	  (conc "register-record-range: register argument must be a register. We got " register))
 
   (assert (or (eqv? 'user   region)
 	      (eqv? 'system region))
-	  (conc "register-record-ref: Only 'system and 'user regions are supported! We got " region))
+	  (conc "register-record-range: Only 'system and 'user regions are supported! We got " region))
 
   (assert (key? key-from)
-	  (conc "register-record-ref: key-from argument must be a key. We got " key-from))
+	  (conc "register-record-range: key-from argument must be a key. We got " key-from))
 
   (assert (key? key-to)
-	  (conc "register-record-ref: key-to argument must be a key. We got " key-to))
+	  (conc "register-record-range: key-to argument must be a key. We got " key-to))
 
-  (let ((entries (entry-store-key-ref register region key-from key-to)))
-    (for-each
-      (lambda (entry)
-	(for-each
-	  (lambda (item)
-	    (if (not (current-items-ref (item-item-ref item)))
-	      (current-items-update! item)))
-	  (entry-items entry)))
-      entries)
-    entries))
+  (reverse
+    (receive (cleanup next) (entry-store-key-ref register region key-from key-to)
+      (let loop ((entries '()))
+	(receive (entry entry-number) (next)
+	  (if entry
+	    (begin
+	      (for-each (lambda (item)
+			  (if (not (current-items-ref (item-item-ref item)))
+			    (current-items-update! item)))
+			(entry-items entry))
+	      (loop (cons entry entries)))
+	    (begin
+	      (cleanup)
+	      entries)))))))
 
 ; Returns the latest entry corresponding to the key or #f if there isn't one.
 ; Tombstones are not visible through this interface. i.e. If the latest entry
