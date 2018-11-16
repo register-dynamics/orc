@@ -46,6 +46,13 @@
             store them persistently, update the entries in the Register,
             and compute proofs and digests on the data.
 
+          + `orc` command line tool
+
+            The command line tool exposes the functionality of the library
+            on the command line. The tool can read from either Register
+            Serialisation Format (RSF) files or orc internal databases,
+            and can list and modify Register entries and items.
+
  3. Usage
 
   The library can be included in a CHICKEN Scheme environment by using
@@ -60,7 +67,8 @@
   A backing store can be opened with `open-backing-store` which will
   either open an existing file or create one if it does not exist. If
   the backing store is new, it must also be initialised with
-  `initialise-backing-store`.
+  `initialise-backing-store`. Stores can also be created and initialised
+  automatically by passing the `-S` option to the command line tool.
 
   Once a backing store has been opened, library calls can be made inside
   a call to `with-backing-store`.
@@ -139,6 +147,11 @@
   with a passed internal name.
 
   There is not currently any support for writing to RSF files.
+
+  3.X Command line tool
+
+  The `orc` command line tool can be invoked with the `--help` switch
+  to print full usage information.
 
  4. Compatibility notes
 

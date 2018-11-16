@@ -16,3 +16,9 @@
   ; Assoc list with properties for your extension:
   '((version "0.1") ;; version number should be a string
     (static "orc.o" "orc-rsf.o"))) ;; for static linking
+
+(compile -o orc -O2 -d1 cli.scm)
+(install-program
+  'orc
+  '("orc")
+  '((version "0.1")))

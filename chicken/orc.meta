@@ -10,7 +10,7 @@
  ; altogether. `depends' is an alias to `needs'.
  ; Notice that you should NOT put Chicken units (e.g., srfi-1, srfi-13
  ; and many others) in `needs' or in `depends'.
- (needs srfi-19 message-digest sha2 sql-de-lite blob-utils)
+ (needs srfi-19 message-digest sha2 sql-de-lite blob-utils args)
 
  ; A list of eggs required for TESTING ONLY.  See the `Tests' section.
  ; Just like `needs' and `depends', `test-depends' should NOT contain
