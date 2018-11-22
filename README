@@ -40,10 +40,107 @@
 
     2.2. What gets installed
 
+          + CHICKEN Scheme library egg
+
+            The library contains the necessary functions to read Registers,
+            store them persistently, update the entries in the Register,
+            and compute proofs and digests on the data.
 
  3. Usage
 
- 4. Compatibility nodes
+  The library can be included in a CHICKEN Scheme environment by using
+  `(use orc)`, which will bring the exported API into scope.
+
+  3.1 Backing stores
+
+  All calls to library methods must be made in the context of a
+  'backing store'. This is an internal database type the orc uses to
+  store and manipulate Registers.
+
+  A backing store can be opened with `open-backing-store` which will
+  either open an existing file or create one if it does not exist. If
+  the backing store is new, it must also be initialised with
+  `initialise-backing-store`.
+
+  Once a backing store has been opened, library calls can be made inside
+  a call to `with-backing-store`.
+
+      (use orc)
+      (define my-backing-store (open-backing-store "my.backing-store"))
+      (with-backing-store my-backing-store (lambda ()
+        (for-each display (list-registers))))
+
+  3.2 Registers
+
+  New Registers can be created using `make-register`, which takes an internal
+  name to associate with the new Register.
+
+  Registers in a backing store can be listed with the `list-registers`
+  command. This will return a list of Register objects that can be passed
+  to other functions, along with the internal name. Individual Registers can
+  also be opened directly by passing their internal name to `open-register`.
+
+  Register objects represent a specific version of a specific Register. For
+  this reason, any methods that modify a Register also return a new Register
+  object representing the new version. This new object must be used from
+  this point onwards to make further modifications to the Register. Edit
+  functions will fail and complain if an old Register version is used.
+
+  An optional version number can also be passed to `open-register` which
+  opens the Register at that version. This is useful for examining the data
+  at a previous time.
+
+  3.3 Records
+
+  A Register entry is an association between a key and some values. Each
+  key is unique but it can be associated with multiple values at once if
+  desired. A Register contains all of the entries that have ever been
+  written to it, but not all of them are current.
+
+  Entries exist in one of two regions – the system region or the user
+  region. The system region contains Register metadata such as its schema
+  while the user region contains the actual data in the Register.
+
+  A record is an entry in the Register that is current – there is no more
+  recent entry with that specific key. Records can be listed for a Register
+  with `register-records`. Each record can be interrogated using the
+  `entry-region`, `entry-key`, `entry-ts` (timestamp) and `entry-items`.
+
+  Records for a given key can be looked up with `register-record-ref`.
+  Key objects can be made using `make-key` or `string->key`, and also
+  come with eqaulity and comparison operators.
+
+  Entries can be created using `make-entry`, which takes values for all
+  the metadata attributes and a list of items. Newly created entries must
+  then be passed to `register-append-entry` to add them to the Register.
+
+  3.4 Items
+
+  An item is the actual unit of data in a Register entry. Each entry can
+  have multiple items. An entry with zero items is valid but is considered
+  to be 'deleted' and will not be returned by `register-records`.
+
+  Items are not contained within an entry – they exist in a separate space
+  and are linked to by an entry through an item reference. The reference
+  is normally the SHA256 digest of the item contents.
+
+  Items are retrieved from an entry using `entry-items`. Item references
+  can be retrieved using `item-item-ref` and the content through `item-blob`.
+
+  Items can be created using `make-item`. Newly created items must then
+  be passed to `register-add-item` to add them to the Register. This must
+  happen before any entries that contain them are added.
+
+  3.5 Register Serialisation Format (RSF)
+
+  An RSF file contains the entire contents and history of a Register.
+  Registers can be loaded from RSF files using `read-rsf`, which will read
+  an RSF file from `(current-input-port)` and add it to the backing store
+  with a passed internal name.
+
+  There is not currently any support for writing to RSF files.
+
+ 4. Compatibility notes
 
  5. What's next?
 
