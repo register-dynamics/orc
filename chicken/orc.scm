@@ -81,6 +81,7 @@
 	 entry-ts
 	 entry-items
 	 entry-audit-path
+	 entry-audit-path*
 	 make-item
 	 item?
 	 make-item-ref
@@ -760,13 +761,14 @@
 ; Calculates the audit path for a given entry number,
 ; which is the extra hashes required to prove that this entry
 ; is in the log.
-(define-in-transaction (entry-audit-path register region key)
+; Generate an audit path for an entry specified by entry number.
+(define-in-transaction (entry-audit-path register entry-number)
 
   (assert (register? register)
 	  (conc "entry-audit-path: register argument must be a register! We got " register))
 
-;(assert (and (number? entry-number) (> entry-number 0))
-;	(conc "entry-audit-path: entry-number argument must be a number > 0! We got " entry-number))
+  (assert (and (number? entry-number) (> entry-number 0))
+	  (conc "entry-audit-path: entry-number argument must be a number > 0! We got " entry-number))
 
   (let ((tree
 	  (make-merkle-tree
@@ -787,9 +789,26 @@
 				       (- end start))
 	      default-leaf: #f))))
 
-    (receive (_ entry-number) (register-record-ref register region key)
-	     (let* ((path (merkle-audit-path (- entry-number 1) tree)))
-	       (list entry-number (register-version register) path)))))
+    (let ((path (merkle-audit-path (- entry-number 1) tree)))
+      (list entry-number (register-version register) path))))
+
+
+; Generate an audit path for an entry specified by key.
+(define-in-transaction (entry-audit-path* register region key)
+
+  (assert (register? register)
+	  (conc "entry-audit-path: register argument must be a register! We got " register))
+
+  (assert (or (eqv? 'user   region)
+	      (eqv? 'system region))
+	  (conc "entry-audit-path: Only 'system and 'user regions are supported! We got " region))
+
+  (assert (key? key)
+	  (conc "entry-audit-path: key argument must be a key. We got " key))
+
+
+  (receive (entry entry-number) (register-record-ref register region key)
+    (entry-audit-path register entry-number)))
 
 
 ;; Operations on Items
