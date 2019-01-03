@@ -622,7 +622,7 @@
 
   (assert (or (eqv? 'user   region)
 	      (eqv? 'system region))
-	  (conc "register-record-ref: Only 'system and 'user regions are supported! We got " region))
+	  (conc "register-records: Only 'system and 'user regions are supported! We got " region))
 
   (let ((entries (entry-store-keys register region)))
     (for-each
@@ -718,40 +718,40 @@
 (define (key<? a b)
 
   (assert (key? a)
-	  (conc "key-<?: a argument must be a key! We got " a))
+	  (conc "key<?: a argument must be a key! We got " a))
 
   (assert (key? b)
-	  (conc "key-<?: b argument must be a key! We got " a))
+	  (conc "key<?: b argument must be a key! We got " a))
 
   (map string<? (key-parts a) (key-parts b)))
 
 (define (key<=? a b)
 
   (assert (key? a)
-	  (conc "key-<?: a argument must be a key! We got " a))
+	  (conc "key<=?: a argument must be a key! We got " a))
 
   (assert (key? b)
-	  (conc "key-<?: b argument must be a key! We got " a))
+	  (conc "key<=?: b argument must be a key! We got " a))
 
   (map string<=? (key-parts a) (key-parts b)))
 
 (define (key>? a b)
 
   (assert (key? a)
-	  (conc "key-<?: a argument must be a key! We got " a))
+	  (conc "key>?: a argument must be a key! We got " a))
 
   (assert (key? b)
-	  (conc "key-<?: b argument must be a key! We got " a))
+	  (conc "key>?: b argument must be a key! We got " a))
 
   (map string>? (key-parts a) (key-parts b)))
 
 (define (key>=? a b)
 
   (assert (key? a)
-	  (conc "key-<?: a argument must be a key! We got " a))
+	  (conc "key>=?: a argument must be a key! We got " a))
 
   (assert (key? b)
-	  (conc "key-<?: b argument must be a key! We got " a))
+	  (conc "key>=?: b argument must be a key! We got " a))
 
   (map string>=? (key-parts a) (key-parts b)))
 
@@ -2045,10 +2045,10 @@ END
     (lambda-in-savepoint (register region)
 
       (assert (register? register)
-	      (conc "entry-store-key-ref: register argument must be a register! We got " register))
+	      (conc "entry-store-keys: register argument must be a register! We got " register))
 
       (assert (symbol? region)
-	      (conc "entry-store-ref: region argument must be a symbol! We got " region))
+	      (conc "entry-store-keys: region argument must be a symbol! We got " region))
 
       (wide-entry-item-rows->entries
 	register
