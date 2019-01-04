@@ -1,6 +1,6 @@
 (
  ; Your egg's license:
- (license "MIT")
+ (license "BSD")
 
  ; Pick one from the list of categories (see below) for your egg and enter it
  ; here.

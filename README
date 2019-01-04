@@ -16,8 +16,10 @@
 	+ chicken/orc - A full, persistent, merkle tree backed implementation of
 	                Open Registers.
 
-	The whole package is distributed under an MIT license and as such is
-	free to use and modify as long as you agree to its terms.
+	The files in this repository are distributed under a range of
+	licenses. However they are, in general, free to use and modify as long
+	as you agree to the terms. Please see the LICENSE files in each
+	directory for more information.
 
 	Note: Should you have any trouble in setting up and using these tools,
 	please feel free to contact me, Andy Bennett at
