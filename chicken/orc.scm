@@ -1384,7 +1384,9 @@
 
 
 			    (if (not (null? row))
-			      ; If there was a row, deserialise it, construct it and return it to the caller of the iterator by jumping to their continuation, if not fall out the bottom of (apply query ...) thus tidying up the database
+			      ; If there was a row, deserialise it, construct it and return it to the caller
+			      ; of the iterator by jumping to their continuation, if not fall out the bottom
+			      ; of (apply query ...) thus tidying up the database
 			      (caller
 				(apply
 				  constructor
