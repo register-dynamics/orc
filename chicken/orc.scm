@@ -624,16 +624,20 @@
 	      (eqv? 'system region))
 	  (conc "register-records: Only 'system and 'user regions are supported! We got " region))
 
-  (let ((entries (entry-store-keys register region)))
-    (for-each
-      (lambda (entry)
-	(for-each
-	  (lambda (item)
-	    (if (not (current-items-ref (item-item-ref item)))
-	      (current-items-update! item)))
-	  (entry-items entry)))
-      entries)
-    entries))
+  (receive (cleanup next) (entry-store-keys register region)
+	   (let loop ((entry   (next))
+		      (entries '()))
+	     (if entry
+	       (begin
+		 (for-each
+		   (lambda (item)
+		     (if (not (current-items-ref (item-item-ref item)))
+		       (current-items-update! item)))
+		   (entry-items entry))
+		 (loop (next) (cons entry entries)))
+	       (begin
+		 (cleanup)
+		 (reverse entries))))))
 
 ; Returns a list of entries.
 ; Finds the latest entries the the keys that lie lexographically between
@@ -1991,9 +1995,19 @@ END
 	#f))))
 
 ; Selects the latest entry for every key in the Backing Store.
-; Performs a range query on the entrys table and returns a list of entrys
-; containing the latest entry at the specified version number for each key it
-; finds.
+; This differs from `entry-store-key-ref` because it cannot be scoped to a
+; particular range of keys.
+; Performs a range query on the entrys table and returns a pair of procedures.
+; One that can be called at the end to clean everything up and one that wraps a
+; running query that the caller can call to get the latest entry at the
+; specified version number for each key it finds.
+; The first time the procedure is called the the first key is returned. When
+; there are no more entries, for any more keys, at the version of the register
+; specified in `register`, #f is returned.  When the caller has taken enough
+; entries, even if they have reached the end, they must call the cleanup
+; procedure.  This procedure returns the equivalent of (values cleanup
+; iterator). `cleanup` is first so that the safe thing is likely to happen with
+; callers that only expect one return value.
 ; Tombstones are not visible through this interface. i.e. If the latest entry
 ; for a particular key has no items then it will not appear at all in the
 ; result set.
@@ -2042,7 +2056,10 @@ END
 	    `(,require-integer ,require-integer>0 ,string->symbol ,string->key ,integer->date ,require-integer-or-null ,require-blob-string-or-null)))) ; (log-id entry-number region key timestamp item-id blob)
 
 
-    (lambda-in-savepoint (register region)
+    (lambda (register region) ; We can't use lambda-in-savepoint with stream-query as it returns a running query out of this lexical scope.
+
+      (assert (eq? #f (autocommit? (db-ctx)))
+	      (conc "entry-store-keys: Calls into the Backing Store expect to already be inside a transaction but we are not!"))
 
       (assert (register? register)
 	      (conc "entry-store-keys: register argument must be a register! We got " register))
@@ -2050,10 +2067,12 @@ END
       (assert (symbol? region)
 	      (conc "entry-store-keys: region argument must be a symbol! We got " region))
 
-      (wide-entry-item-rows->entries
+      (wide-entry-item-stream->entry-stream
 	register
-	region
-	(cut run-query (db-ctx) select-entry-for-keys <> (register-backing-store-ref register) region (register-version register))))))
+	(cut stream-query (db-ctx) select-entry-for-keys <> (register-backing-store-ref register) region (register-version register))
+	(lambda (item-id blob) ; Put items in the entry's item list.
+	  (make-item blob (make-item-ref-opaque item-id)))
+	#f))))
 
 ; Returns a pair of procedures. One that can be called at the end to clean
 ; everything up and one that wraps a running query that the caller can call to
