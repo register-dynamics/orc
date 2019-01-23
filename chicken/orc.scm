@@ -1088,40 +1088,101 @@
   (open-database filename))
 
 
-; Initialises a database with the appropriate schema.
+; Checks whether the database has an appropriate schema. Optionaly initialises
+; or upgrades it if not.
+; A completely uninitialised database is initialised to the latest version of
+; the schema if the initialise argument is true.
+; If the auto-upgrade argument is true then when an old version of the schema
+; is found it is upgraded to the latest version. Otherwise, a warning is
+; printed.
+; If the database has the latest version of the schema by the end of this
+; procedure then #t is returned. Otherwise #f is returned.
 ;
 ; We use the dynamic variable db-ctx to find the database to initialise so you
-; will have to call this inside `with-database`.
+; will have to call this inside `with-backing-store`.
+; We use `with-transaction` here rather than `define-in-transaction` so that we
+; know we're always in our own, non-nestable, transaction and can be sure our
+; changes commit.
 ;
-; Returns #t if the database was successfully initialised and throws an
-; exception otherwise.
+; Returns #t if the database was successfully initialised, #f if the database
+; remains on an old version of the schema and throws an exception otherwise.
 ;
 ; There is currently no provision for customising the table names or having
 ; more than one backing store per database.
-(define (initialise-backing-store)
-  (let ((db (db-ctx)))
-    (with-transaction
-      db
-      (lambda ()
-	(for-each
-	  (lambda (q)
-	    (exec
-	      (sql db q)))
-	  `("CREATE TABLE \"entry-items\" (\"log-id\"  NOT NULL , \"entry-number\"  NOT NULL , \"item-id\"  NOT NULL );"
-	    "CREATE TABLE \"entrys\" (\"log-id\" INTEGER NOT NULL , \"entry-number\" INTEGER NOT NULL , \"region\" TEXT NOT NULL , \"key\" TEXT NOT NULL , \"timestamp\" INTEGER NOT NULL , PRIMARY KEY (\"log-id\", \"entry-number\"));"
-	    "CREATE TABLE \"item-digests\" (\"item-id\" INTEGER NOT NULL , \"algorithm\" TEXT NOT NULL , \"digest\" BLOB NOT NULL , PRIMARY KEY (\"item-id\", \"algorithm\"));"
-	    "CREATE TABLE \"items\" (\"item-id\" INTEGER PRIMARY KEY  NOT NULL  UNIQUE , \"blob\" BLOB NOT NULL  UNIQUE );"
-	    "CREATE TABLE \"registers\" (\"log-id\" INTEGER PRIMARY KEY  NOT NULL  UNIQUE , \"index-of\" INTEGER NOT NULL , \"name\" TEXT NOT NULL );"
-	    "CREATE INDEX \"entry-items-log-id-entry-number-item-id\" ON \"entry-items\" (\"log-id\" ASC, \"entry-number\" ASC, \"item-id\" ASC);"
-	    "CREATE UNIQUE INDEX \"entrys-region-key-entry-number-log-id\" ON \"entrys\" ( \"region\" ASC, \"key\" ASC, \"entry-number\" ASC, \"log-id\" ASC);"
-	    "CREATE UNIQUE INDEX \"item-digests-algorithm-digest\" ON \"item-digests\" (\"algorithm\" ASC, \"digest\" ASC);"
-	    "CREATE UNIQUE INDEX \"registers-index-of-name\" ON \"registers\" (\"index-of\" ASC, \"name\" ASC);"))
-	#t))))
+(define ensure-backing-store
+  (let* ((schemas '(("CREATE TABLE \"entry-items\" (\"log-id\"  NOT NULL , \"entry-number\"  NOT NULL , \"item-id\"  NOT NULL );"
+		     "CREATE TABLE \"entrys\" (\"log-id\" INTEGER NOT NULL , \"entry-number\" INTEGER NOT NULL , \"region\" TEXT NOT NULL , \"key\" TEXT NOT NULL , \"timestamp\" INTEGER NOT NULL , PRIMARY KEY (\"log-id\", \"entry-number\"));"
+		     "CREATE TABLE \"item-digests\" (\"item-id\" INTEGER NOT NULL , \"algorithm\" TEXT NOT NULL , \"digest\" BLOB NOT NULL , PRIMARY KEY (\"item-id\", \"algorithm\"));"
+		     "CREATE TABLE \"items\" (\"item-id\" INTEGER PRIMARY KEY  NOT NULL  UNIQUE , \"blob\" BLOB NOT NULL  UNIQUE );"
+		     "CREATE TABLE \"registers\" (\"log-id\" INTEGER PRIMARY KEY  NOT NULL  UNIQUE , \"index-of\" INTEGER NOT NULL , \"name\" TEXT NOT NULL );"
+		     "CREATE INDEX \"entry-items-log-id-entry-number-item-id\" ON \"entry-items\" (\"log-id\" ASC, \"entry-number\" ASC, \"item-id\" ASC);"
+		     "CREATE UNIQUE INDEX \"entrys-region-key-entry-number-log-id\" ON \"entrys\" ( \"region\" ASC, \"key\" ASC, \"entry-number\" ASC, \"log-id\" ASC);"
+		     "CREATE UNIQUE INDEX \"item-digests-algorithm-digest\" ON \"item-digests\" (\"algorithm\" ASC, \"digest\" ASC);"
+		     "CREATE UNIQUE INDEX \"registers-index-of-name\" ON \"registers\" (\"index-of\" ASC, \"name\" ASC);")
+		    ("CREATE TABLE \"orc-schema-version\" (\"version\" INTEGER PRIMARY KEY  NOT NULL );"
+		     "INSERT INTO \"orc-schema-version\" (\"version\") VALUES (2);")
+		     ))
+	 (latest  (length schemas)))
+
+    (lambda (#!key (initialise #f) (auto-upgrade #f))
+      (let ((db (db-ctx)))
+	(with-transaction
+	  db
+	  (lambda ()
+	    (let ((schema-version (store-version)))
+	      (let ((rv ; Be explicit about the fact we need to calculate a return value for with-transaction.
+		      (cond
+			((= schema-version latest)
+			 #t)
+			((> schema-version latest)
+			 (abort (conc "ensure-backing-store: Backing Store is at version ~A but the latest we know that we understand is ~A\n"
+				      schema-version latest)))
+			((or auto-upgrade (and initialise (= 0 schema-version)))
+			 (for-each
+			   (lambda (upgrade)
+			     (for-each
+			       (lambda (q)
+				 (exec
+				   (sql db q)))
+			       upgrade))
+			   (drop schemas schema-version))
+			 (fprintf (current-error-port)
+				  "Backing Store upgraded from version ~A to version ~A.\n"
+				  schema-version
+				  latest)
+			 #t)
+			(else
+			  (fprintf (current-error-port)
+				   "WARNING: Backing Store is at version ~A but can be upgraded to version ~A. Some features may not be available until you run `(initialise-backing-store auto-upgrade: #t)`\n"
+				   schema-version
+				   latest)
+			  #f))))
+		rv))))))))
+
+; Initialises a database with the appropriate schema.
+; A completely uninitialised database is always initialised to the latest
+; version of the schema.
+; If the auto-upgrade argument is true then when an old version of the schema
+; is found it is upgraded to the latest version. Otherwise, a warning is
+; printed.
+; If the database has the latest version of the schema by the end of this
+; procedure then #t is returned. Otherwise #f is returned.
+;
+; Returns #t if the database was successfully initialised, #f if the database
+; remains on an old version of the schema and throws an exception otherwise.
+;
+; There is currently no provision for customising the table names or having
+; more than one backing store per database.
+(define (initialise-backing-store #!key (auto-upgrade #f))
+  (ensure-backing-store
+    initialise: #t
+    auto-upgrade: auto-upgrade))
 
 (define db-ctx (make-parameter #f))
 
 (define (with-backing-store db thunk)
   (parameterize ((db-ctx db))
+		(ensure-backing-store)
 		(thunk)))
 
 ;; ADTs for the Backing Store
