@@ -1667,23 +1667,29 @@ END
 	      "region" = ?2 AND
 	      "entry-number" <= ?3
 	      AND "key" BETWEEN ?4 AND ?5
-	      GROUP BY "key") AS "specific-entrys"
+	      GROUP BY "key"
+	      ORDER BY "key") AS "specific-entrys"
 
-	    LEFT OUTER JOIN "entrys"
+	    INNER JOIN "entrys"
 	    ON
+	    ?1 = "entry-items"."log-id" AND
+	    "specific-entrys"."key" = "entrys"."key" AND
+	    ?2 = "entrys"."region" AND
 	    "specific-entrys"."entry-number" = "entrys"."entry-number"
 
 	    LEFT OUTER JOIN "entry-items"
 	    ON
-	    "entrys"."log-id" = "entry-items"."log-id" AND
-	    "entrys"."entry-number" = "entry-items"."entry-number"
+	    ?1 = "entry-items"."log-id" AND
+	    "specific-entrys"."entry-number" = "entry-items"."entry-number"
 
-	    LEFT OUTER JOIN "items"
+	    INNER JOIN "items"
 	    ON
 	    "items"."item-id" = "entry-items"."item-id"
 
 	    WHERE
-	    "entrys"."log-id" = ?1;
+	    "entrys"."log-id" = ?1
+
+	    ORDER BY "key";
 END
 	    `(,require-integer ,symbol->string    ,require-integer ,key->string ,key->string)                                                           ; (log-id region version key-from key-to)
 	    `(,require-integer ,require-integer>0 ,string->symbol ,string->key ,integer->date ,require-integer-or-null ,require-blob-string-or-null)))) ; (log-id entry-number region key timestamp item-id blob)
