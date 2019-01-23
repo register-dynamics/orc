@@ -1472,6 +1472,45 @@
 		       exp exp* ...))))))
 
 
+; Returns the version of the schema that the Backing Store is currently using.
+(define store-version
+  (lambda-in-savepoint ()
+    (if (= 0 (length (query fetch-all (sql (db-ctx) "SELECT \"tbl_name\" FROM \"sqlite_master\" WHERE \"tbl_name\" = \"orc-schema-version\" AND \"type\" = \"table\";"))))
+      (if (equal? (query fetch-all (sql (db-ctx) ; The original schema wasn't versioned so we have to compare it piece-by-piece.
+#<<END
+					SELECT "sql"
+					FROM "sqlite_master"
+					WHERE
+					(("type" = "table"
+					  AND
+					  ("tbl_name" IN
+					   ("entry-items", "entrys", "item-digests", "items", "registers")))
+					 OR
+					 ("type" = "index"
+					  AND
+					  ("tbl_name" IN
+					   ("entrys", "item-digests", "items", "items", "registers", "entry-items", "entrys", "item-digests", "registers"))))
+					ORDER BY "sql";
+END
+					))
+		  '((()) (()) (()) (()) (()) ; The sqlite_autoindexes don't have any SQL. We could exclude them but counting them makes sure they're there!
+			 ("CREATE INDEX \"entry-items-log-id-entry-number-item-id\" ON \"entry-items\" (\"log-id\" ASC, \"entry-number\" ASC, \"item-id\" ASC)")
+			 ("CREATE TABLE \"entry-items\" (\"log-id\"  NOT NULL , \"entry-number\"  NOT NULL , \"item-id\"  NOT NULL )")
+			 ("CREATE TABLE \"entrys\" (\"log-id\" INTEGER NOT NULL , \"entry-number\" INTEGER NOT NULL , \"region\" TEXT NOT NULL , \"key\" TEXT NOT NULL , \"timestamp\" INTEGER NOT NULL , PRIMARY KEY (\"log-id\", \"entry-number\"))")
+			 ("CREATE TABLE \"item-digests\" (\"item-id\" INTEGER NOT NULL , \"algorithm\" TEXT NOT NULL , \"digest\" BLOB NOT NULL , PRIMARY KEY (\"item-id\", \"algorithm\"))")
+			 ("CREATE TABLE \"items\" (\"item-id\" INTEGER PRIMARY KEY  NOT NULL  UNIQUE , \"blob\" BLOB NOT NULL  UNIQUE )")
+			 ("CREATE TABLE \"registers\" (\"log-id\" INTEGER PRIMARY KEY  NOT NULL  UNIQUE , \"index-of\" INTEGER NOT NULL , \"name\" TEXT NOT NULL )")
+			 ("CREATE UNIQUE INDEX \"entrys-region-key-entry-number-log-id\" ON \"entrys\" ( \"region\" ASC, \"key\" ASC, \"entry-number\" ASC, \"log-id\" ASC)")
+			 ("CREATE UNIQUE INDEX \"item-digests-algorithm-digest\" ON \"item-digests\" (\"algorithm\" ASC, \"digest\" ASC)")
+			 ("CREATE UNIQUE INDEX \"registers-index-of-name\" ON \"registers\" (\"index-of\" ASC, \"name\" ASC)")))
+	1  ; We found the original schema
+	0) ; Things haven't been initialised yet
+      (let ((v (query fetch-all (sql (db-ctx) "SELECT \"version\" FROM \"orc-schema-version\";"))))
+	(if (eq? 1 (length v))
+	  (caar v)
+	  (abort (conc "orc-schema-version table is corrupt. Expected one row but got " v)))))))
+
+
 ; Look up an item in the Backing Store by item-ref.
 ; Returns an item if successful, #f if the item could not be found and throws
 ; an exception otherwise.
