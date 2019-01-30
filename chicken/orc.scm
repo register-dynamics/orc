@@ -333,10 +333,16 @@
     (= 3 (length obj))
     (eqv? 'item (car obj))))
 
-(define (item-item-ref item)
-  (assert (item? item)
-	  (conc "item-item-ref: item argument must be an item! We got " item))
-  (second item))
+(define item-item-ref
+  (getter-with-setter
+    (lambda (item)
+      (assert (item? item)
+	      (conc "item-item-ref: item argument must be an item! We got " item))
+      (second item))
+    (lambda (item x)
+      (assert (internal-call?)
+	      (conc "item-item-ref set!: External callers cannot set an item's item-ref!"))
+      (set! (second item) x))))
 
 (define (item-blob item)
   (assert (item? item)
@@ -756,6 +762,23 @@
 	  (conc "item-ref-equal?: b argument must be an item-ref! We got " b))
 
   (equal? a b))
+
+; Set an item's item-ref if it doesn't already have one.
+; Returns the item.
+(define (item-set-ref! item item-ref)
+
+  (assert (item? item)
+	  (conc "item-set-ref!: item argument must be an item! We got " item))
+
+  (assert (item-ref? item-ref)
+	  (conc "item-set-ref!: item-ref argument must be an item-ref! We got " item-ref))
+
+  (assert (not (item-item-ref item))
+	  (conc "item-set-ref!: item argument's item-ref must be #f! We got " (item-item-ref item)))
+
+  (set! (item-item-ref item) item-ref)
+
+  item)
 
 
 
