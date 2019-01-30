@@ -714,26 +714,27 @@
 ;; Operations on Items
 
 ; Compare items.
-; They must be equivalent. i.e. they must contain the same blob.
+; They must be equivalent. i.e. they must contain the same blob but the
+; references only have to match if both items have them.
 (define (item-eqv? a b)
 
   (assert (item? a)
-	  (conc "item-equal?: a argument must be an item! We got " a))
+	  (conc "item-eqv?: a argument must be an item! We got " a))
 
   (assert (item? b)
-	  (conc "item-equal?: b argument must be an item! We got " b))
+	  (conc "item-eqv?: b argument must be an item! We got " b))
 
   (let ((ref-a (item-item-ref a))
 	(ref-b (item-item-ref b)))
     (and
       (equal? (item-blob a) (item-blob b))
-      (item-ref-equal? ref-a ref-b))))
+      (if (and ref-a ref-b) ; If the items have references then they must be equal.
+	(item-ref-equal? ref-a ref-b)
+	#t))))
 
 ; Compare items.
 ; They must be equal?. i.e. they must contain the same blob and the same
 ; reference.
-; Later we can add support for item-equivalence where the blbs are the same and
-; the references are different.
 (define (item-equal? a b)
 
   (assert (item? a)
@@ -745,8 +746,7 @@
   (equal? a b))
 
 ; Compare item-refs.
-; They must be equal?. i.e. they must be of the same type, encoded in the same
-; algorithm and the digests must match.
+; They must be equal?. i.e. they must match exactly.
 (define (item-ref-equal? a b)
 
   (assert (item-ref? a)
