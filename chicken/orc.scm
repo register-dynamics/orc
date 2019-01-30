@@ -517,8 +517,8 @@
   (assert (entry? entry)
 	  (conc "register-append-entry: entry argument must be an entry! We got " entry))
 
-  ; prepare the entry by ensuring that we have opaque item-refs in the item list
-  ; pass it to entry-store add
+  ; prepare the entry by ensuring that we have item-refs in the item list
+  ; pass it to entry-store-add
   ; return the register that entry-store-add gives us
   (entry-store-add
     register
@@ -527,13 +527,20 @@
       items: (map (lambda (obj)
 		    (let ((item-ref (cond
 					((item-ref? obj) obj)
-					((item?     obj) (item-item-ref obj))
+
+					((item?     obj)
+					 (let ((item-ref (item-item-ref obj)))
+					   (if item-ref
+					     item-ref ; The item has an item-ref so should already be in the database.
+					     (begin   ; Add the item to the database and return its new item-ref.
+					       (register-add-item! register obj)
+					       (assert (item-item-ref obj)
+						       (conc "register-append-entry: Called register-add-item! on item but got " obj))
+					       (item-item-ref obj)))))
+
 					(else
 					  (assert #f
 						  (conc "register-append-entry: Got unknown item-or-ref " obj " in item-list for entry " entry))))))
-
-		      (assert item-ref ; This happens when the item isn't passed to register-add-item before appearing in an entry passed to register-append-entry.
-			      (conc "register-append-entry: 'digest reference of item " obj " could not be resolved to an item in the current scope. Whilst processing entry " entry))
 
 		      item-ref))
 		  (entry-items entry)))))
