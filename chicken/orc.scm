@@ -484,24 +484,8 @@
   (assert (item? item)
 	  (conc "register-add-item: item argument must be an item. We got " item))
 
-  (let* ((item-ref      (item-item-ref  item))
-	 (existing-item (item-store-ref item-ref)))
-
-    (if existing-item
-      (cond
-	((item? existing-item)
-	 ; Items need to be equal? rather than eqv? because we don't currently know how to merge references of different types in the item structure.
-	 (assert (item-eqv? item existing-item)
-		 (conc "register-add-item: Found an equivalent item in current items but items do not match! item: " item " , existing-item: " existing-item))
-	 register)
-	((item-ref? existing-item)
-	 (let ((item-store-ref (item-store-add! item))) ; Add it to the Backing Store.
-	   (item-store-add-digest! item-store-ref (item-item-ref item)) ; Store the item's digest against the opaque reference returned form item-store-add!
-	   register)))
-      (begin
-	(let ((item-store-ref (item-store-add! item))) ; Add it to the Backing Store.
-	  (item-store-add-digest! item-store-ref (item-item-ref item)) ; Store the item's digest against the opaque reference returned form item-store-add!
-	  register)))))
+  (item-store-add! item) ; Add it to the Backing Store.
+  register)
 
 ; An entry serialises to json like this:
 ; {"index-entry-number":"1","entry-number":"1","entry-timestamp":"2016-04-05T13:23:05Z","key":"SU","item-hash":["sha-256:e94c4a9ab00d951dadde848ee2c9fe51628b22ff2e0a88bff4cca6e4e6086d7a"]}
@@ -932,6 +916,8 @@
 		     "CREATE UNIQUE INDEX \"registers-index-of-name\" ON \"registers\" (\"index-of\" ASC, \"name\" ASC);")
 		    ("CREATE TABLE \"orc-schema-version\" (\"version\" INTEGER PRIMARY KEY  NOT NULL );"
 		     "INSERT INTO \"orc-schema-version\" (\"version\") VALUES (2);")
+		    ("DROP TABLE \"item-digests\";"
+		     "UPDATE \"orc-schema-version\" SET \"version\" = 3;")
 		     ))
 	 (latest  (length schemas)))
 
@@ -1383,37 +1369,6 @@ END
 	  (abort (conc "orc-schema-version table is corrupt. Expected one row but got " v)))))))
 
 
-; Look up an item in the Backing Store by item-ref.
-; Returns an item if successful, #f if the item could not be found and throws
-; an exception otherwise.
-; TODO: Support returning just an item-ref if that's all we've got. We'd need to switch the order of the LEFT JOIN around!
-(define item-store-ref
-
-  (let ((select-item-by-digest
-	 (make-query
-	  "SELECT \"items\".\"item-id\", \"items\".\"blob\" from \"items\" LEFT JOIN \"item-digests\" ON \"items\".\"item-id\" = \"item-digests\".\"item-id\" WHERE \"item-digests\".\"algorithm\" = ?1 AND \"item-digests\".\"digest\" = ?2;"
-	 `(,symbol->string  ,require-blob)              ; (algorithm digest)
-	 `(,require-integer ,require-blob-or-string)))) ; (item-id   blob)
-
-
-    (lambda-in-savepoint (item-ref)
-
-      (define (->item-ref item-id blob)
-	(make-item blob (make-item-ref item-id)))
-
-      (assert (item-ref? item-ref)
-	      (conc "item-store-ref: item-ref argument must be an item-ref! We got " item-ref))
-
-      (case (item-ref-type item-ref)
-	((digest)
-
-	 (let ((items (run-query (db-ctx) select-item-by-digest ->item-ref (item-ref-algo item-ref) (item-ref-digest item-ref))))
-	   (<=1-result items)))
-
-	(else
-	  (assert #f
-		  (conc "item-store-ref: unsupported item-ref type! We got " (item-ref-type item-ref))))))))
-
 ; Add an item to the Backing Store.
 ; Returns an item-ref if successful and throws an exception otherwise.
 (define item-store-add!
@@ -1442,37 +1397,6 @@ END
 	;       add or migrate digests later.
 
 	(make-item-ref item-id)))))
-
-
-; Add a 'digest item-ref to the Backing Store.
-; Returns #t if successful and throws an exception otherwise.
-(define item-store-add-digest!
-  (let ((insert-item-digest
-	  (make-query
-	    "INSERT INTO \"item-digests\" (\"item-id\", \"algorithm\", \"digest\") VALUES (?1, ?2, ?3);"
-	    `(,require-integer ,symbol->string ,require-blob)
-	    `())))
-
-    (lambda-in-savepoint (item-ref-opaque item-ref-digest*)
-
-      (assert (item-ref? item-ref-opaque)
-	      (conc "item-store-add-digest!; item-ref-opaque argument must be an item-ref! We got " item-ref-opaque))
-
-      (assert (eqv? 'opaque (item-ref-type item-ref-opaque))
-	      (conc "item-store-add-digest!: item-ref-opaque argument must be an item-ref! We got " item-ref-opaque))
-
-      (assert (item-ref? item-ref-digest*)
-	      (conc "item-store-add-digest!: item-ref-digest argument must be an item-ref! We got " item-ref-digest*))
-
-      (assert (eqv? 'digest (item-ref-type item-ref-digest*))
-	      (conc "item-store-add-digest!: Only 'digest item-refs are currently supported. We got " item-ref-digest*))
-
-      (let ((rows-changed (run-exec (db-ctx) insert-item-digest (item-ref-item-id item-ref-opaque) (item-ref-algo item-ref-digest*) (item-ref-digest item-ref-digest*))))
-
-	(assert (= 1 rows-changed)
-		(conc "item-store-add-digest!: Expected 1 row to change when INSERTing item-ref into database. We got " rows-changed))
-
-	#t))))
 
 
 ; Finds a Register in the Backing Store by name
