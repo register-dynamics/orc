@@ -54,7 +54,6 @@
 	 list-registers
 	 register?
 	 register-root-digest
-	 register-add-item
 	 register-append-entry
 	 register-records
 	 register-records-range
