@@ -337,12 +337,12 @@
 
 (define (item-item-ref item)
   (assert (item? item)
-	  (conc "item-item-ref: entry argument must be an entry! We got " item))
+	  (conc "item-item-ref: item argument must be an item! We got " item))
   (second item))
 
 (define (item-blob item)
   (assert (item? item)
-	  (conc "item-blob: entry argument must be an entry! We got " item))
+	  (conc "item-blob: item argument must be an item! We got " item))
   (third item))
 
 
