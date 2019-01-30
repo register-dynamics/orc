@@ -1393,13 +1393,19 @@ END
 
 
 ; Add an item to the Backing Store.
-; Returns an item-ref if successful and throws an exception otherwise.
+; Returns an item-ref if the item was added to the Backing Store or the Backing
+; Store already contained the item. Throws an exception otherwise.
 (define item-store-add!
   (let ((insert-item
 	  (make-query
-	    "INSERT INTO \"items\" (\"blob\") VALUES (?1);"
+	    "INSERT OR IGNORE INTO \"items\" (\"blob\") VALUES (?1);"
 	    `(,require-blob-or-string) ; blob
-	    `())))                     ; nothing
+	    `()))                      ; nothing
+	(select-item
+	  (make-query
+	    "SELECT \"item-id\" FROM \"items\" WHERE \"blob\" = ?1;"
+	    `(,require-blob-or-string) ; blob
+	    `(,require-integer))))     ; item-id
 
     (lambda-in-savepoint (item)
 
@@ -1409,17 +1415,20 @@ END
       (let ((rows-changed (run-exec (db-ctx) insert-item (item-blob item)))
 	    (item-id      (last-insert-rowid (db-ctx))))
 
-	(assert (= 1 rows-changed)
-		(conc "item-store-add!: Expected 1 row to change when INSERTing item into database. We got " rows-changed))
+	(case rows-changed
 
-	(assert (item-item-ref item)
-		(conc "item-store-add!: We currently only support items that already contain an item-ref. We got " item))
+	      ((1) ; The item was added to the database.
+	       (make-item-ref item-id))
 
-	; TODO: transactionalise / savepoint
-	; TODO: if item already exists but ref does not, succeed so that we can
-	;       add or migrate digests later.
+	      ((0) ; The item should already be in the database.
+	       (let ((item-ids (run-query (db-ctx) select-item identity (item-blob item))))
+		 (assert (= 1 (length item-ids))
+			 (conc "item-store-add!: Expected to find 1 item when SELECTing existing item from database. We got " item-ids))
+		 (make-item-ref (car item-ids))))
 
-	(make-item-ref item-id)))))
+	      (else
+		(assert #f
+			(conc "item-store-add!!: Expected 0 or 1 rows to change when INSERTing item into database. We got " rows-changed))))))))
 
 
 ; Finds a Register in the Backing Store by name
