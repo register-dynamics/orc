@@ -83,7 +83,6 @@
 	 entry-audit-path*
 	 make-item
 	 item?
-	 make-item-ref
 	 item-ref?
 	 item-eqv?
 	 item-equal?
@@ -92,10 +91,7 @@
 	 item-ref?
 	 item-or-ref?
 	 item-ref-equal?
-	 item-ref-type
-	 item-ref-algo
-	 item-ref-digest
-	 item-ref-opaque-evict
+	 item-ref-evict
 
 	 ; RSF
 	 read-rsf
@@ -320,13 +316,16 @@
 
 
 ;; item
-(define (make-item blob #!optional (ref (blob->item-ref blob)))
+(define (make-item blob #!optional opaque-ref)
 
   (assert (or (string? blob)
 	      (blob? blob))
 	  (conc "make-item: blob argument must be a string or blob! We got " blob))
 
-  `(item ,ref ,blob))
+  (assert (or (not opaque-ref) (item-ref? opaque-ref))
+	  (conc "make-item: opaque-ref argument must be an item-ref or #f! We got " opaque-ref))
+
+  `(item ,opaque-ref ,blob))
 
 (define (item? obj)
   (and
@@ -347,82 +346,38 @@
 
 ;; item-ref
 
-; A reference to an item.
-; The reference can be in terms of a digest or a backing store and some key
-; data.
-; For now we only support reference by digest.
-(define (make-item-ref algo digest)
-
-  (assert (eqv? 'sha-256 algo)
-	  (conc "make-item-ref: Only 'sha-256 item digest algorithms are supported! We got " algo))
-
-  (assert (blob? digest)
-	  (conc "make-item-ref: digest argument must be a blob! We got " digest))
-
-  `(item-ref digest (,algo ,digest)))
-
 ; Makes an item-ref that points to the item directly in the Backing Store.
 ; This constructor should only be called by the Backing Store code.
-(define (make-item-ref-opaque item-id)
+(define (make-item-ref item-id)
 
   (assert (integer? item-id)
-	  (conc "make-item-ref-opaque: item-id argument must be an integer! We got " item-id))
+	  (conc "make-item-ref: item-id argument must be an integer! We got " item-id))
 
-  `(item-ref opaque (,item-id)))
+  `(item-ref ,item-id))
 
 (define (item-ref? obj)
   (and
     (list? obj)
-    (= 3 (length obj))
+    (= 2 (length obj))
     (eqv? 'item-ref (car obj))))
 
 (define (item-or-ref? obj)
   (or (item?     obj)
       (item-ref? obj)))
 
-(define (item-ref-type item-ref)
-
-  (assert (item-ref? item-ref)
-	  (conc "item-ref-type: item-ref argument must be an item-ref! We got " item-ref))
-
-  (second item-ref))
-
-(define (item-ref-algo item-ref)
-
-  (assert (item-ref? item-ref)
-	  (conc "item-ref-algo: item-ref argument must be an item-ref! We got " item-ref))
-
-  (assert (eqv? 'digest (item-ref-type item-ref))
-	  (conc "item-ref-algo: item-ref argument must be a 'digest item-ref! We got " item-ref))
-
-  (first (third item-ref)))
-
-(define (item-ref-digest item-ref)
-
-  (assert (item-ref? item-ref)
-	  (conc "item-ref-digest: item-ref argument must be an item-ref! We got " item-ref))
-
-  (assert (eqv? 'digest (item-ref-type item-ref))
-	  (conc "item-ref-digest: item-ref argument must be a 'digest item-ref! We got " item-ref))
-
-  (second (third item-ref)))
-
 (define (item-ref-item-id item-ref)
 
   (assert (item-ref? item-ref)
 	  (conc "item-ref-item-id: item-ref argument must be an item-ref! We got " item-ref))
 
-  (assert (eqv? 'opaque (item-ref-type item-ref))
-	  (conc "item-ref-item-id: item-ref argument must be an 'opaque item-ref! We got " item-ref))
+  (second item-ref))
 
-  (first (third item-ref)))
-
-; Evict an opaque item-ref so that users can put them in things like web forms
-; and then compare them to other item-refs in a POST handler. The item-id is
+; Evict an item-ref so that users can put them in things like web forms and
+; then compare them to other item-refs in a POST handler. The item-id is
 ; supposed to be entirely internal to the Backing Store and is not guranteed to
 ; be stable. Therefore we deliberately introduce a bit of instability so that
 ; users of the API don't come to rely on them.
-(define item-ref-opaque-evict
+(define item-ref-evict
 
   (let ((magic (random 65536)))
 
@@ -430,9 +385,6 @@
 
       (assert (item-ref? item-ref)
 	      (conc "item-ref-opaque-evict: item-ref argument must be an item-ref! We got " item-ref))
-
-      (assert (eqv? 'opaque (item-ref-type item-ref))
-	      (conc "item-ref-opaque-evict: item-ref argument must be an 'opaque item-ref! We got " item-ref))
 
       (number->string
 	(bitwise-xor magic (item-ref-item-id item-ref))))))
@@ -578,9 +530,6 @@
 
 		      (assert item-ref ; This happens when the item isn't passed to register-add-item before appearing in an entry passed to register-append-entry.
 			      (conc "register-append-entry: 'digest reference of item " obj " could not be resolved to an item in the current scope. Whilst processing entry " entry))
-
-		      (assert (eqv? 'opaque (item-ref-type item-ref))
-			      (conc "register-append-entry: Got a reference to an item that did not resolve to an 'opaque item-ref! We got " obj " that resolved to " item-ref " whilst processing entry " entry))
 
 		      item-ref))
 		  (entry-items entry)))))
@@ -780,29 +729,8 @@
 
 ;; Operations on Items
 
-(define (blob->item-ref blob #!optional (algo 'sha-256))
-
-  (assert (or (string? blob)
-	      (blob? blob))
-	  (conc "blob->item-ref: blob argument must be a string or blob! We got " blob))
-
-  (assert (eqv? 'sha-256 algo)
-	  (conc "blob->item-ref: Only 'sha-256 item digest algorithms are supported! We got " algo))
-
-  (let ((digest ((cond
-		   ((string? blob) message-digest-string)
-		   ((blob?   blob) message-digest-blob))
-		 (sha256-primitive)
-		 blob
-		 'blob)))
-
-    (make-item-ref algo digest)))
-
 ; Compare items.
-; They must be equivalent. i.e. they must contain the same blob but the
-; reference can be different if it is a different type or algorithm.
-; TODO: for now we require references to be equal if they are of the same type.
-;       We can relax this for 'digest item-refs provided the algorithms differ.
+; They must be equivalent. i.e. they must contain the same blob.
 (define (item-eqv? a b)
 
   (assert (item? a)
@@ -815,8 +743,7 @@
 	(ref-b (item-item-ref b)))
     (and
       (equal? (item-blob a) (item-blob b))
-      (or (item-ref-equal? ref-a ref-b) ; references are equal
-	  (not (eqv? (item-ref-type ref-a) (item-ref-type ref-b))))))) ; references are not equal but they're of different types anyway
+      (item-ref-equal? ref-a ref-b))))
 
 ; Compare items.
 ; They must be equal?. i.e. they must contain the same blob and the same
@@ -1472,7 +1399,7 @@ END
     (lambda-in-savepoint (item-ref)
 
       (define (->item-ref item-id blob)
-	(make-item blob (make-item-ref-opaque item-id)))
+	(make-item blob (make-item-ref item-id)))
 
       (assert (item-ref? item-ref)
 	      (conc "item-store-ref: item-ref argument must be an item-ref! We got " item-ref))
@@ -1514,7 +1441,7 @@ END
 	; TODO: if item already exists but ref does not, succeed so that we can
 	;       add or migrate digests later.
 
-	(make-item-ref-opaque item-id)))))
+	(make-item-ref item-id)))))
 
 
 ; Add a 'digest item-ref to the Backing Store.
@@ -1892,7 +1819,7 @@ END
 	register
 	(cut stream-query (db-ctx) select-entry-by-key <> (register-backing-store-ref register) region (register-version register) key-a key-b)
 	(lambda (item-id blob) ; Put items in the entry's item list.
-	  (make-item blob (make-item-ref-opaque item-id)))
+	  (make-item blob (make-item-ref item-id)))
 	#f))))
 
 ; Selects the latest entry for every key in the Backing Store.
@@ -1972,7 +1899,7 @@ END
 	register
 	(cut stream-query (db-ctx) select-entry-for-keys <> (register-backing-store-ref register) region (register-version register))
 	(lambda (item-id blob) ; Put items in the entry's item list.
-	  (make-item blob (make-item-ref-opaque item-id)))
+	  (make-item blob (make-item-ref item-id)))
 	#f))))
 
 ; Returns a pair of procedures. One that can be called at the end to clean
@@ -2032,7 +1959,7 @@ END
 	register
 	(cut stream-query (db-ctx) select-entries-in-order <> (register-backing-store-ref register) (register-version register) start)
 	(lambda (item-id blob) ; Put items in the entry's item list.
-	  (make-item blob (make-item-ref-opaque item-id)))
+	  (make-item blob (make-item-ref item-id)))
 	#t))))
 
 ; Adds an entry to the log of the specified Register.
@@ -2077,9 +2004,6 @@ END
 
 	   (assert (item-ref? item-ref)
 		   (conc "entry-store-add: All entry-items must be item-refs! We got " (entry-items entry)))
-
-	   (assert (eqv? 'opaque (item-ref-type item-ref))
-		   (conc "entry-store-add: We can only add entrys that use opaque item-refs! We got " (entry-items entry) ))
 
 
 	   (let ((rows-changed (run-exec (db-ctx) insert-entry-items log-id entry-number (item-ref-item-id item-ref))))
