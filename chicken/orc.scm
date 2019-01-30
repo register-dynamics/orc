@@ -482,15 +482,29 @@
 
 ; Adds the specified item to the item pool.
 ; This procedure adds full items. item-refs are not allowed. For that you need register-declare-item.
-(define-in-transaction (register-add-item register item)
+(define-in-transaction (register-add-item! register item)
 
   (assert (register? register)
-	  (conc "register-add-item: register argument must be a register. We got " register))
+	  (conc "register-add-item!: register argument must be a register. We got " register))
 
   (assert (item? item)
-	  (conc "register-add-item: item argument must be an item. We got " item))
+	  (conc "register-add-item!: item argument must be an item. We got " item))
 
-  (item-store-add! item) ; Add it to the Backing Store.
+  (assert (not (item-item-ref item))
+	  (conc "register-add-item!: item argument is probably already in the database because it has an item-ref! We got " item))
+
+  ; FIXME: This mutates the item to add an item-ref and therefore assumes that
+  ;        the database transaction never subsequently fails. This should be
+  ;        extended so that, if the transaction does fail, we know what to tidy
+  ;        up and being capable of tidying it up.
+  ;        This responsibility could be delegated to the Backing Store as
+  ;        Backing Stores that want to avoid client-server round-trip latency
+  ;        will have to keep track of these refs anyway. This would involve
+  ;        significantly enriching the Backing Store interface.
+
+  (item-set-ref! item                    ; After adding it to the Backing Store, add the new item-ref to the item.
+		 (item-store-add! item)) ; Add it to the Backing Store.
+
   register)
 
 ; An entry serialises to json like this:
