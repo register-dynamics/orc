@@ -541,20 +541,14 @@
 	 ; Items need to be equal? rather than eqv? because we don't currently know how to merge references of different types in the item structure.
 	 (assert (item-eqv? item existing-item)
 		 (conc "register-add-item: Found an equivalent item in current items but items do not match! item: " item " , existing-item: " existing-item))
-	 (current-items-update! item (item-item-ref existing-item)) ; Make it available in the current scope.
 	 register)
 	((item-ref? existing-item)
 	 (let ((item-store-ref (item-store-add! item))) ; Add it to the Backing Store.
 	   (item-store-add-digest! item-store-ref (item-item-ref item)) ; Store the item's digest against the opaque reference returned form item-store-add!
-	   (current-items-update! item item-store-ref) ; Make it available in the current scope.
-	   register))
-	(else
-	  (assert #f
-		  (conc "register-add-item: Whilst looking for " item ", we found an unexpected item in current-items: " existing-item))))
+	   register)))
       (begin
 	(let ((item-store-ref (item-store-add! item))) ; Add it to the Backing Store.
 	  (item-store-add-digest! item-store-ref (item-item-ref item)) ; Store the item's digest against the opaque reference returned form item-store-add!
-	  (current-items-update! item item-store-ref) ; Make it available in the current scope.
 	  register)))))
 
 ; An entry serialises to json like this:
@@ -567,18 +561,6 @@
   (assert (entry? entry)
 	  (conc "register-append-entry: entry argument must be an entry! We got " entry))
 
-  ; Returns an opaque item-ref or #f if the supplied item-ref was of type
-  ; 'digest and not found the current scope.
-  (define (item-ref->opaque obj)
-    (case (item-ref-type obj)
-      ((digest)
-       ; TODO: add obj if it's not found and is an item rather than an item-ref??
-       (current-items-ref obj))
-      ((opaque) obj)
-      (else
-	(assert #f
-		(conc "reigster-append-entry: Got an item-ref of unknown type! We got " obj)))))
-
   ; prepare the entry by ensuring that we have opaque item-refs in the item list
   ; pass it to entry-store add
   ; return the register that entry-store-add gives us
@@ -587,22 +569,18 @@
     (update-entry
       entry
       items: (map (lambda (obj)
-		    (let ((item-ref (item-ref->opaque
-				      (cond
+		    (let ((item-ref (cond
 					((item-ref? obj) obj)
 					((item?     obj) (item-item-ref obj))
 					(else
 					  (assert #f
-						  (conc "register-append-entry: Got unknown item-or-ref " obj " in item-list for entry " entry)))))))
+						  (conc "register-append-entry: Got unknown item-or-ref " obj " in item-list for entry " entry))))))
 
 		      (assert item-ref ; This happens when the item isn't passed to register-add-item before appearing in an entry passed to register-append-entry.
 			      (conc "register-append-entry: 'digest reference of item " obj " could not be resolved to an item in the current scope. Whilst processing entry " entry))
 
 		      (assert (eqv? 'opaque (item-ref-type item-ref))
 			      (conc "register-append-entry: Got a reference to an item that did not resolve to an 'opaque item-ref! We got " obj " that resolved to " item-ref " whilst processing entry " entry))
-
-		      (assert (current-items-ref item-ref) ; This happens when we get an opaque, possibly valid, reference to an item that isn't in the current scope.
-			      (conc "register-append-entry: Got a reference to an item " obj " that was not declared in the current scope whilst processing " entry))
 
 		      item-ref))
 		  (entry-items entry)))))
@@ -627,13 +605,7 @@
 	   (let loop ((entry   (next))
 		      (entries '()))
 	     (if entry
-	       (begin
-		 (for-each
-		   (lambda (item)
-		     (if (not (current-items-ref (item-item-ref item)))
-		       (current-items-update! item)))
-		   (entry-items entry))
-		 (loop (next) (cons entry entries)))
+	       (loop (next) (cons entry entries))
 	       (begin
 		 (cleanup)
 		 (reverse entries))))))
@@ -664,12 +636,7 @@
       (let loop ((entries '()))
 	(receive (entry entry-number) (next)
 	  (if entry
-	    (begin
-	      (for-each (lambda (item)
-			  (if (not (current-items-ref (item-item-ref item)))
-			    (current-items-update! item)))
-			(entry-items entry))
-	      (loop (cons entry entries)))
+	    (loop (cons entry entries))
 	    (begin
 	      (cleanup)
 	      entries)))))))
@@ -696,11 +663,6 @@
 				(conc "register-record-ref: Expected a single entry but got >1"))
 			(cleanup)
 
-			(when entry
-				(for-each (lambda (item)
-					(if (not (current-items-ref (item-item-ref item)))
-						(current-items-update! item)))
-						(entry-items entry)))
 			(values entry entry-number))))
 
 
@@ -817,83 +779,6 @@
 
 
 ;; Operations on Items
-
-; TODO: make sure this is threadsafe!
-; This is an alist of item-refs that we have seen. It maps to and from the
-; 'digest form and the 'opaque form. We could use the Backing Store were it not
-; for the requirement that we keep track of which items and item-refs we've
-; seen in the "current scope".
-; We can't currently handle the same item referred to by more than one distinct
-; 'digest item-ref.
-
-; This is the list of item-refs seen in the current context. i.e. rsf file.
-(define current-items
-  (make-parameter '()))
-
-(define (current-items-ref item-ref)
-  (alist-ref item-ref (current-items) item-ref-equal?))
-
-(define (current-items-update! item #!optional item-store-ref)
-
-  (assert (item? item)
-	  (conc "current-items-update!: item argument must be an item! We got " item))
-
-  (cond
-   ((and item item-store-ref)
-    ; This is the original behaviour of using current-items to map between 'opaque and 'digest item-refs
-    ; FIXME: Really we require one 'digest and one 'opaque but for now we require
-    ;        each one to be in a specific place rather than handling it more
-    ;        elegantly. To fix this we'd need to support mapping from one 'opaque
-    ;        to one or more 'digests.
-    (assert (eqv? 'digest (item-ref-type (item-item-ref item)))
-	    (conc "current-items-update!: item argument must contain a 'digest item-ref! We got " item))
-
-    (assert (eqv? 'opaque (item-ref-type item-store-ref))
-	    (conc "current-items-update!: item-store-ref argument must contain an 'opaque item-ref! We got " item-store-ref))
-
-    (current-items-update!* (item-item-ref item) item-store-ref)
-    (current-items-update!* item-store-ref     (item-item-ref item)))
-
-   ((and item (eqv? #f item-store-ref))
-    ; This allows us to declare item-refs with only 'opaque item-refs (no
-    ; 'digests) for use in the current scope. This is useful for items read
-    ; from the database and returned without ever having needed a 'digest.
-    (assert (eqv? 'opaque (item-ref-type (item-item-ref item)))
-	    (conc "current-items-update!: item argument must contain a 'opaque item-ref! We got " item))
-
-    ; Just store #t for now as all the sites that could receive this don't currently use it as anything other than a boolean.
-    (current-items-update!* (item-item-ref item) (item-item-ref item)))))
-
-(define (current-items-update!* item-ref-a item-ref-b)
-
-  (let ((existing (current-items-ref item-ref-a)))
-    (cond
-      ((and existing (item-ref-equal? item-ref-a existing))
-       ; This is the case where the item-ref currently maps to itself. We're
-       ; now being given an opportunity to learn about one of its digests so
-       ; let's seize it!
-       (assert (eqv? 'opaque (item-ref-type existing))
-	       (conc "current-items-update!*: item-ref " existing " current maps to itself but is not 'opaque!"))
-
-       (assert (eqv? 'digest (item-ref-type item-ref-b))
-	       (conc "current-items-update!*: We're being asked to associate " item-ref-a " that we already know about with " item-ref-b " but the new item-ref is not a 'digest."))
-
-       (current-items
-	 (alist-update item-ref-a item-ref-b (current-items) item-ref-equal?))
-       (current-items))
-
-      (existing
-	; The item already exists and we might be being asked to associate it with something else.
-	(fprintf (current-error-port) "WARNING: item ~A has already been declared in this scope!\n" item-ref-a)
-	(assert (item-ref-equal? existing item-ref-b)
-		(conc "current-items-update!*: item-ref " item-ref-a " has already been defined as " existing " but we're being asked to redefine it as " item-ref-b))
-	(current-items))
-
-      (else
-	; The item doesn't already exist.
-	(current-items
-	  (alist-update item-ref-a item-ref-b (current-items) item-ref-equal?))
-	(current-items)))))
 
 (define (blob->item-ref blob #!optional (algo 'sha-256))
 
