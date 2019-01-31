@@ -46,7 +46,7 @@ exec time /usr/bin/env csi -ns "$0" -- "$@"
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use orc)
+(use orc orc-rsf)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -138,30 +138,36 @@ exec time /usr/bin/env csi -ns "$0" -- "$@"
   (when (or (arg? "-h") (arg? "--help")) (usage 0))
   (when (or (arg? "-v") (arg? "--version")) (banner 0))
 
-  (when (arg? "--init")
-    (printf "Initialising orc.backing-store.sqlite\n")
-    (initialise-backing-store "orc.backing-store.sqlite"))
+  (define db (open-backing-store "all-gov-uk.orc.backing-store.sqlite"))
+
+  (with-backing-store
+    db
+    (lambda ()
+
+      (when (arg? "--init")
+	(printf "Initialising all-gov-uk.orc.backing-store.sqlite\n")
+	(initialise-backing-store))
 
 
-  (cond
+      (cond
 
-    ((= 2 (length (args)))
-     (load-register-from-rsf-file (first (args)) (second (args)))
-     (fprintf stderr "\n")
-     (fprintf stderr "\n")
-     (exit 0))
+	((= 2 (length (args)))
+	 (load-register-from-rsf-file (first (args)) (second (args)))
+	 (fprintf stderr "\n")
+	 (fprintf stderr "\n")
+	 (exit 0))
 
-    ((or
-       (= 0 (length (args)))
-       (and (= 1 (length (args))) (equal? "-" (first (args)))))
-     (with-input-from-port (current-input-port) load-registers-from-port)
-     (fprintf stderr "\n")
-     (fprintf stderr "\n")
-     (exit 0))
+	((or
+	   (= 0 (length (args)))
+	   (and (= 1 (length (args))) (equal? "-" (first (args)))))
+	 (with-input-from-port (current-input-port) load-registers-from-port)
+	 (fprintf stderr "\n")
+	 (fprintf stderr "\n")
+	 (exit 0))
 
-    (else
-      (fprintf stderr "Unknown command line arguments ~A\n" (args))
-      (fprintf stderr "\n")
-      (usage 1))))
+	(else
+	  (fprintf stderr "Unknown command line arguments ~A\n" (args))
+	  (fprintf stderr "\n")
+	  (usage 1))))))
 
 
