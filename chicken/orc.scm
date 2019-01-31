@@ -93,9 +93,6 @@
 	 item-ref-equal?
 	 item-ref-evict
 
-	 ; RSF
-	 read-rsf
-
 	 ; Backing Stores
 	 open-backing-store
 	 initialise-backing-store
@@ -107,10 +104,10 @@
 (import chicken scheme)
 
 ; Units - http://api.call-cc.org/doc/chicken/language
-(use extras data-structures srfi-1 ports)
+(use extras data-structures srfi-1)
 
 ; Eggs - http://wiki.call-cc.org/chicken-projects/egg-index-4.html
-(use srfi-19 message-digest sha2 sql-de-lite merkle-tree)
+(use srfi-19 sha2 sql-de-lite merkle-tree)
 
 
 
@@ -801,109 +798,6 @@
   (set! (item-item-ref item) item-ref)
 
   item)
-
-
-
-;; Operations on Dates
-
-(define (string->date* src . fmtstr)
-  (parameterize ((local-timezone-locale (utc-timezone-locale)))
-		(apply string->date src fmtstr)))
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; RSF (Register Serialisation Format) parser and stream operations
-
-;; Stream command handlers
-
-(define (rsf-assert-root-digest line-no register digest)
-  ; deconstrucut the sha-256:xxxx thing
-  ; check that the digest-algorithm matches or is available
-  ; check that the hash matches
-  (fprintf (current-error-port) "~A: rsf-assert-root-digest: ~A\n" line-no digest)
-  register)
-
-(define (rsf-add-item line-no register item)
-  (register-add-item register (make-item item))
-  register)
-
-; A multi-valued append-entry looks like this:
-; append-entry	user	UA	2016-10-21T16:11:20Z	sha-256:37ca110698ea569fc229e5042830384890ab1095737f1630c9de30692cfcf973;sha-256:0ed1f6d3321a473b463a17b46332fe920e853954db856844669303a5aba0361b
-(define (rsf-append-entry line-no register region key timestamp item-refs)
-
-  (assert (or (equal? "system" region)
-	      (equal? "user"   region))
-	  (conc "rsf-append-entry: Only 'system' and 'user' regions are supported! We got " region " on line " line-no))
-
-  ; Convert "sha-256:abc123" to an item-ref.
-  (define (string->item-ref str)
-    (let ((parts (string-split str ":" #t)))
-
-      (assert (= 2 (length parts))
-	      (conc "rsf-append-entry: string->item-ref got an item reference: with more than 2 parts: " str))
-
-      (make-item-ref
-	(string->symbol (first parts))
-	(with-input-from-string  (conc "#${" (second parts) "}") read))))
-
-
-  (let* ((item-refs (string-split item-refs ";" #t))
-	 (item-refs (map string->item-ref item-refs))
-	 (entry     (apply make-entry
-			   (string->symbol region)
-			   (make-key key)
-			   (string->date* timestamp "~Y-~m-~dT~H:~M:~SZ")
-			   item-refs)))
-    (register-append-entry register entry)))
-
-
-;; Parser
-
-(define commands
-  `(("assert-root-hash" . ,rsf-assert-root-digest)
-    ("add-item"         . ,rsf-add-item)
-    ("append-entry"     . ,rsf-append-entry)))
-
-(define (command->proc command)
-  (alist-ref command commands equal? values))
-
-; Reads RSF from (current-input-port) and puts it in a Register.
-(define-in-transaction (read-rsf #!optional name register)
-
-  (assert (or (eq? #f register) (register? register))
-	  (conc "read-rsf: register argument must be a register! We got " register))
-
-  (parameterize ((current-items '()))
-    (let loop
-      ((register (or register (make-register name)))
-       (previous-line #f)
-       (line     (read-line))
-       (line-no  1))
-
-      (assert (register? register)
-	      (conc "read-rsf: The handler for line " (sub1 line-no) " returned " register " which is not a register!"))
-
-      (cond
-	((eof-object? line)
-	 (if (not (equal? "assert-root-hash" (car (string-split previous-line "\t" #t))))
-	   (fprintf (current-error-port) "WARNING: RSF file did not end with assert-root-hash! Integrity cannot be confirmed.\n"))
-	 register)
-	(else
-	  (loop
-	    (let* ((commands (string-split line "\t" #t))
-		   (command  (car commands))
-		   (rest     (cdr commands)))
-
-	      (if (= 1 line-no)
-		; First line *must* be an assert-root-hash
-		(assert (equal? "assert-root-hash" command)
-			(conc "read-rsf: RSF files must begin with assert-root-hash! We got " line " on line " line-no)))
-
-	      (apply (command->proc command) line-no register rest))
-	    line
-	    (read-line)
-	    (add1 line-no)))))))
 
 
 
