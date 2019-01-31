@@ -100,6 +100,7 @@
 	 open-backing-store
 	 initialise-backing-store
 	 with-backing-store
+	 with-register-transaction
 	 )
 
 
@@ -1022,9 +1023,28 @@
 (define db-ctx (make-parameter #f))
 
 (define (with-backing-store db thunk)
+
+  (assert (eq? #f (db-ctx))
+	  (conc "with-backing-store: nested calls to `with-backing-store` or `with-register-transaction` are not supported!"))
+
   (parameterize ((db-ctx db))
 		(ensure-backing-store)
 		(thunk)))
+
+(define (with-register-transaction thunk)
+
+  (assert (eq? #f (internal-call?))
+	  (conc "with-register-transaction: nested calls to `with-backing-store` or `with-register-transaction` are not supported!"))
+
+  (assert (db-ctx)
+	  (conc "with-register-transaction: calls to `with-register-transaction` must be in the dynamics scope of a valid backing-store. You need to call `with-backing-store` in the correct place!"))
+
+  (define-in-transaction (with-register-transaction* thunk)
+    (thunk))
+
+  (with-register-transaction* thunk))
+
+
 
 ;; ADTs for the Backing Store
 
