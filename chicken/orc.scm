@@ -53,6 +53,7 @@
 	 open-register
 	 list-registers
 	 register?
+	 register-version
 	 register-root-digest
 	 register-append-entry
 	 register-records
