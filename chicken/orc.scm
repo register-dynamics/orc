@@ -1753,7 +1753,7 @@ END
 	    (assert (eqv? (last-region) region)
 		    (conc "wide-entry-item-stream->entry-stream: We got different entry regions for different items for entry " entry-number " in log " log-id ". We got " (last-region) " and " region))
 
-	    (assert (eqv? (last-key) key)
+	    (assert (key-equal? (last-key) key)
 		    (conc "wide-entry-item-stream->entry-stream: We got different entry keys for different items for entry " entry-number " in log " log-id ". We got " (last-key) " and " key))
 
 	    (assert (date=? (last-ts) ts)
