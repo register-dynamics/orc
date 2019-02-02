@@ -82,6 +82,7 @@
 	 entry-items
 	 entry-audit-path
 	 entry-audit-path*
+	 register-entries-range
 	 make-item
 	 item?
 	 item-ref?
@@ -741,6 +742,52 @@
 
   (receive (entry entry-number) (register-record-ref register region key)
     (entry-audit-path register entry-number)))
+
+
+; Returns a list of entries.
+; Finds all the entries numbered between start and end (start < n <= end). i.e.
+; (start,end]. (Registers have entries numbered starting from 1 for some
+; reason. So providing 0 for start gets you all the entries from the beginning
+; of the Register.)
+; As this is an Entry oriented interface, rather than a Record oriented
+; interface, tombstones are always visible. i.e. If an entry has no items then
+; it appears in the result set provided that it lies inside the requested
+; range.
+(define-in-transaction (register-entries-range register start end)
+
+  (assert (register? register)
+	  (conc "register-entries-range: register argument must be a register. We got " register))
+
+  (assert (integer? start)
+	  (conc "register-entries-range: start argument must be an integer. We got " start))
+
+  (assert (>= start 0)
+	  (conc "register-entries-range: start argument must be >=0. We got " start))
+
+  (assert (<= start (register-version register))
+	  ; Not strictly required as we assert (<= start end) later but leads to better error messages.
+	  (conc "register-entries-range: start argument must be <= the version number of the register. We got " start " and " (register-version register)))
+
+  (assert (integer? end)
+	  (conc "register-entries-range: end argument must be an integer. We got " end))
+
+  (assert (> end 0)
+	  (conc "register-entries-range: end argument must be >0. We got " end))
+
+  (assert (<= end (register-version register))
+	  (conc "register-entries-range: end argument must be <= the version number of the register. We got " end " and " (register-version register)))
+
+  (assert (<= start end)
+	  (conc "register-entries-range: start argument must be < end. We got " start " and " end))
+
+  (receive (cleanup next) (entry-store-stream register (add1 start) end)
+	   (let loop ((entry   (next))
+		      (entries '()))
+	     (if entry
+	       (loop (next) (cons entry entries))
+	       (begin
+		 (cleanup)
+		 (reverse entries))))))
 
 
 ;; Operations on Items
@@ -1817,7 +1864,7 @@ END
 ; get entries and their entry-numbers in order until they've had their fill.
 ; The first time the procedure is called the entry at the entry number
 ; specified in `start` is returned. When there are no more entries at the
-; version of the register specified in `register`, #f is returned.
+; version of the register specified in `end` or `register`, #f is returned.
 ; When the caller has taken enough entries, even if they have reached the end,
 ; they must call the cleanup procedure.
 ; This procedure returns the equivalent of (values cleanup iterator). `cleanup`
@@ -1857,7 +1904,7 @@ END
             `(,require-integer ,require-integer   ,require-integer)                                                                               ; (log-id version start)
 	    `(,require-integer ,require-integer>0 , string->symbol ,string->key ,integer->date ,require-integer-or-null ,require-blob-string-or-null)))) ; (log-id entry-number region key timestamp item-id blob)
 
-    (lambda (register #!optional (start 1)) ; We can't use lambda-in-savepoint with stream-query as it returns a running query out of this lexical scope.
+    (lambda (register #!optional (start 1) (end #f)) ; We can't use lambda-in-savepoint with stream-query as it returns a running query out of this lexical scope.
 
       (assert (eq? #f (autocommit? (db-ctx)))
 	      (conc "entry-store-stream: Calls into the Backing Store expect to already be inside a transaction but we are not!"))
@@ -1867,7 +1914,7 @@ END
 
       (wide-entry-item-stream->entry-stream
 	register
-	(cut stream-query (db-ctx) select-entries-in-order <> (register-backing-store-ref register) (register-version register) start)
+	(cut stream-query (db-ctx) select-entries-in-order <> (register-backing-store-ref register) (or end (register-version register)) start)
 	(lambda (item-id blob) ; Put items in the entry's item list.
 	  (make-item blob (make-item-ref item-id)))
 	#t))))
