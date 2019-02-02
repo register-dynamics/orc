@@ -49,6 +49,9 @@
 (module orc-rsf
 	(; RSF Input
 	 read-rsf
+
+	 ; RSF Output
+	 write-rsf
 	 )
 
 (import chicken scheme)
@@ -57,7 +60,8 @@
 (use extras data-structures srfi-1 ports)
 
 ; Eggs - http://wiki.call-cc.org/chicken-projects/egg-index-4.html
-(use srfi-19 message-digest sha2 orc)
+(require-extension utf8)
+(use srfi-19 message-digest sha2 blob-hexadecimal utf8-srfi-13 orc)
 
 
 
@@ -233,6 +237,48 @@
 		line
 		(read-line)
 		(add1 line-no)))))))))
+
+
+;; Emitter
+
+; Takes entries from a Register and writes RSF to (current-output-port).
+(define (write-rsf register #!optional (start 0) (end (register-version register)))
+
+  ; Emit the `assert-root-hash`.
+  (printf "assert-root-hash\tsha-256:~A\n" (blob->hex (register-root-digest register start)))
+
+  (parameterize ((current-items '()))
+    (for-each
+      (lambda (entry)
+
+	(let ((digests
+		; Emit the `add-item`s where necessary.
+		(fold
+		  (lambda (item seed)
+		    (let ((digest (blob->digest (item-blob item))))
+		      (if (not (current-items-ref digest))
+			(begin
+			  (current-items-add! digest item 0)
+			  (printf "add-item\t~A\n" (item-blob item)))) ; TODO: assert no tabs
+		      (cons
+			(conc "sha-256:" (blob->hex digest))
+			seed)))
+		  '()
+		  (entry-items entry))))
+
+	  ; Emit the `append-entry`.
+	  (printf
+	    "append-entry\t~A\t~A\t~A\t~A\n"
+	    (entry-region entry)
+	    (key->string (entry-key entry))  ; TODO: escape tabs
+	    (date->string (entry-ts entry) "~Y-~m-~dT~H:~M:~SZ")
+	    (string-join digests ","))))     ; TODO: sort the items
+
+      (register-entries-range register start end))
+
+    ; Emit the `assert-root-hash`.
+    (printf "assert-root-hash\tsha-256:~A\n" (blob->hex (register-root-digest register end)))))
+
 
 )
 
