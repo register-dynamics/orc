@@ -441,10 +441,16 @@
 (define-in-transaction (list-registers)
   (register-store-registers))
 
-(define-in-transaction (register-root-digest register)
+(define-in-transaction (register-root-digest register #!optional (version (register-version register)))
 
   (assert (register? register)
 	  (conc "register-root-digest: register argument must be a register! We got " register))
+
+  (assert (<= version (register-version register))
+	  (conc "register-root-digest: version argument must be <= the version number of the register. We got " version " and " (register-version register)))
+
+  (assert (>= version 0)
+	  (conc "register-root-digest: version argument must be >= 0. We got " version))
 
   (let ((tree
 	  (make-merkle-tree
@@ -457,11 +463,11 @@
 				  (cleanup)
 				  v)))
 	      update: #f
-	      size:   (constantly (register-version register))
+	      size:   (constantly version)
 	      levels: (lambda ()
-			(log2-pow2>=n (register-version register)))
+			(log2-pow2>=n version))
 	      count-leaves-in-range: (lambda (start end)
-				       (assert (<= end (register-version register)))
+				       (assert (<= end version))
 				       (- end start))
 	      default-leaf: #f))))
 
