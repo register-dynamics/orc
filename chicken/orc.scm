@@ -704,6 +704,8 @@
 						(entry-items entry)))
 			(values entry entry-number))))
 
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Higher level and compound operations on ADTs
 
