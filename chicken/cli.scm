@@ -70,6 +70,7 @@
   ("ls" "<REGISTER> <REGION> <KEY>" "Print all the entries with the given key.")
   ("log" "<REGISTER> <START-VERSION> <END-VERSION>" "Print all the entries modified between the two versions.")
   ("diff" "<REGISTER> <START-VERSION> <END-VERSION>" "Print the differences in entries between the two versions.")
+  ("dump" "<REGISTER>" "Print a full copy of the Register in RSF format.")
 ))
 
 (define (column-widths get-columns)
@@ -138,6 +139,10 @@
 
       (("ls")
         (for-each print (map first (list-registers))))
+
+      (("dump" register-name)
+        (and-let* ((register (open-register register-name)))
+          (with-output-to-port (current-output-port) (cut write-rsf register))))
 
       (("ls" register-name region-name)
         (and-let* ((register (open-register register-name))
