@@ -26,7 +26,24 @@
       (fprintf (current-error-port) "Already a Register with the name ~A!\n" name))
     (not register)))
 
+(define (write-tsv entry #!optional prefix)
+  (let ((region (entry-region entry))
+        (key    (key->string (entry-key entry)))
+        (date   (date->string (entry-ts entry) "~Y-~m-~dT~H:~M:~SZ")))
+    (for-each (lambda (entry-item)
+      (when prefix (printf "~A\t" prefix))
+      (printf "~A\t~A\t~A\t~A\n" region key date (item-blob entry-item)))
+      (entry-items entry))))
+
+(define (write-diff entry-formatter old-entry new-entry)
+  (when old-entry
+    (entry-formatter old-entry "-"))
+  (when new-entry
+    (entry-formatter new-entry "+")))
+
 (define formats `(
+  ("tsv" ,write-tsv ,(cut write-diff write-tsv <> <>)
+    "Tab-seperated region, key, timestamp and item blob, one line per entry item (default).")
 ))
 
 (define get-format (cut assoc <> formats))
