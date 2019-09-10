@@ -64,6 +64,7 @@
 (define format-description fourth)
 
 (define commands '(
+  ("clone" "<LOCATION> <LABEL>" "Read RSF and store a Register (from STDIN if '-' or file).")
 ))
 
 (define (column-widths get-columns)
@@ -113,4 +114,12 @@
 (receive (options args) (args:parse (command-line-arguments) opts)
   (with-backing-store (get-backing-store (backing-store)) (lambda ()
     (match args
+      (("clone" "-" name)
+        (when (check-not-register name)
+          (with-input-from-port (current-input-port) (cut read-rsf name))))
+
+      (("clone" location name)
+        (when (check-not-register name)
+          (with-input-from-file location (cut read-rsf name))))
+
       (_ (usage))))))
