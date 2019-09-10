@@ -63,6 +63,7 @@
       (call-with-values get-columns list))))
 
 (define commands-column-widths (column-widths (cut unzip3 commands)))
+(define formats-column-widths (column-widths (cut values (map format-name formats) (map format-description formats))))
 
 (define (usage)
   (with-output-to-port (current-error-port) (lambda ()
@@ -76,14 +77,24 @@
         (for-each display (map string-pad-right command commands-column-widths))
         (newline))
       commands)
+    (newline)
+    (print "Formats:")
+    (for-each (lambda (format)
+        (display (string-pad-right (format-name format) (first formats-column-widths)))
+        (display (string-pad-right (format-description format) (second formats-column-widths)))
+        (newline))
+      formats)
     )))
 
 
 (define backing-store (make-parameter "./orc.register-store"))
+(define current-format (make-parameter (get-format "tsv")))
 
 (define opts
   (list (args:make-option (S store) (#:required "BACKING-STORE") (conc "Read and write to BACKING-STORE instead of " (backing-store) ".")
           (backing-store arg))
+        (args:make-option (f format) (#:required "FORMAT") "Use the specified FORMAT for entry output."
+          (current-format (get-format arg)))
         (args:make-option (? h help) #:none "Print help and exit."
           (usage)
           (exit 1))))
