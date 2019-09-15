@@ -26,6 +26,15 @@
       (fprintf (current-error-port) "Already a Register with the name ~A!\n" name))
     (not register)))
 
+(define (write-tsv-oneline entry #!optional prefix)
+  (when prefix (printf "~A\t" prefix))
+  (printf
+      "~A\t~A\t~A\t~A\n"
+      (entry-region entry)
+      (key->string (entry-key entry))  ; TODO: escape tabs
+      (date->string (entry-ts entry) "~Y-~m-~dT~H:~M:~SZ")
+      (string-join (map item-blob (entry-items entry)) "\t")))
+
 (define (write-tsv entry #!optional prefix)
   (let ((region (entry-region entry))
         (key    (key->string (entry-key entry)))
@@ -44,6 +53,8 @@
 (define formats `(
   ("tsv" ,write-tsv ,(cut write-diff write-tsv <> <>)
     "Tab-seperated region, key, timestamp and item blob, one line per entry item (default).")
+  ("oneline" ,write-tsv-oneline ,(cut write-diff write-tsv-oneline <> <>)
+    "Tab-seperated region, key, timestamp and item blobs, with all items on one line.")
 ))
 
 (define get-format (cut assoc <> formats))
