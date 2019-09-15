@@ -68,6 +68,8 @@
   ("ls" "" "Print the names of Registers in this backing store.")
   ("ls" "<REGISTER> <REGION>" "Print all the entries in this Register region.")
   ("ls" "<REGISTER> <REGION> <KEY>" "Print all the entries with the given key.")
+  ("log" "<REGISTER> <START-VERSION> <END-VERSION>" "Print all the entries modified between the two versions.")
+  ("diff" "<REGISTER> <START-VERSION> <END-VERSION>" "Print the differences in entries between the two versions.")
 ))
 
 (define (column-widths get-columns)
@@ -114,6 +116,15 @@
           (usage)
           (exit 1))))
 
+(define (parse-version-number register version)
+  (let* ((max-version (register-version register))
+         (backwards (equal? #\^ (string-ref version 0)))
+         (version (string->number (if backwards (substring version 1 (string-length version)) version)))
+         (version (if backwards (- max-version version) version)))
+    (assert (and (>= version 0) (<= version max-version))
+      (conc "Version must be between 0 and " (number->string max-version)))
+    version))
+
 (receive (options args) (args:parse (command-line-arguments) opts)
   (with-backing-store (get-backing-store (backing-store)) (lambda ()
     (match args
@@ -137,5 +148,28 @@
         (and-let* ((register (open-register register-name))
                   (record (register-record-ref register (string->symbol region-name) (make-key key-name))))
           ((entry-formatter (current-format)) record)))
+
+      (("log" register-name start-version end-version)
+        (and-let* ((register (open-register register-name))
+                   (start (parse-version-number register start-version))
+                   (end   (parse-version-number register end-version))
+                   (entries (register-entries-range register start end)))
+          (for-each (entry-formatter (current-format)) entries)))
+
+      (("diff" register-name start-version end-version)
+        (and-let* ((register (open-register register-name))
+                   (start (parse-version-number register start-version))
+                   (end   (parse-version-number register end-version))
+                   (old-register (open-register register-name start))
+                   (entries (register-entries-range register start end))
+                   (changes (fold
+                              (lambda (entry alist) (alist-update (entry-key entry) entry alist key-equal?))
+                              '()
+                              entries))
+                   (new-entries (map cdr changes))
+                   (old-entries (map (lambda (entry)
+                                  (register-record-ref old-register (entry-region entry) (entry-key entry)))
+                                  new-entries)))
+        (for-each (diff-formatter (current-format)) old-entries new-entries)))
 
       (_ (usage))))))
