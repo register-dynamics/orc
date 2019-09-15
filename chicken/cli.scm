@@ -65,6 +65,7 @@
 
 (define commands '(
   ("clone" "<LOCATION> <LABEL>" "Read RSF and store a Register (from STDIN if '-' or file).")
+  ("ls" "<REGISTER> <REGION> <KEY>" "Print all the entries with the given key.")
 ))
 
 (define (column-widths get-columns)
@@ -121,5 +122,10 @@
       (("clone" location name)
         (when (check-not-register name)
           (with-input-from-file location (cut read-rsf name))))
+
+      (("ls" register-name region-name key-name)
+        (and-let* ((register (open-register register-name))
+                  (record (register-record-ref register (string->symbol region-name) (make-key key-name))))
+          ((entry-formatter (current-format)) record)))
 
       (_ (usage))))))
