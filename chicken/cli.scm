@@ -65,6 +65,7 @@
 
 (define commands '(
   ("clone" "<LOCATION> <LABEL>" "Read RSF and store a Register (from STDIN if '-' or file).")
+  ("ls" "" "Print the names of Registers in this backing store.")
   ("ls" "<REGISTER> <REGION>" "Print all the entries in this Register region.")
   ("ls" "<REGISTER> <REGION> <KEY>" "Print all the entries with the given key.")
 ))
@@ -123,6 +124,9 @@
       (("clone" location name)
         (when (check-not-register name)
           (with-input-from-file location (cut read-rsf name))))
+
+      (("ls")
+        (for-each print (map first (list-registers))))
 
       (("ls" register-name region-name)
         (and-let* ((register (open-register register-name))
