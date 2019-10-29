@@ -272,7 +272,7 @@
 	    (entry-region entry)
 	    (key->string (entry-key entry))  ; TODO: escape tabs
 	    (date->string (entry-ts entry) "~Y-~m-~dT~H:~M:~SZ")
-	    (string-join digests ","))))     ; TODO: sort the items
+	    (string-join digests ";"))))     ; TODO: sort the items
 
       (register-entries-range register start end))
 
